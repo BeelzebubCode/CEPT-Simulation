@@ -201,44 +201,7 @@ prisma/
       </a><br />
       <sub>BeelzebubCode</sub>
     </td>
-    <td align="center">
-      <a href="https://github.com/cchiOru">
-        <img src="https://github.com/cchiOru.png" width="100px;" alt="yodsakorn_jangmanee"/><br />
-        <sub><b>yodsakorn_jangmanee</b></sub>
-      </a><br />
-      <sub>cchiOru</sub>
-    </td>
-    <td align="center">
-      <a href="https://github.com/Cell1991">
-        <img src="https://github.com/Cell1991.png" width="100px;" alt="Chu"/><br />
-        <sub><b>Chu</b></sub>
-      </a><br />
-      <sub>Cell1991</sub>
-    </td>
-    <td align="center">
-      <a href="https://github.com/Golffzza">
-        <img src="https://github.com/Golffzza.png" width="100px;" alt="Golffzza"/><br />
-        <sub><b>Golffzza</b></sub>
-      </a><br />
-      <sub>Golffzza</sub>
-    </td>
-    <td align="center">
-      <a href="https://github.com/meedet">
-        <img src="https://github.com/meedet.png" width="100px;" alt="meedet"/><br />
-        <sub><b>meedet</b></sub>
-      </a><br />
-      <sub>meedet</sub>
-    </td>
-  </tr>
-  <tr>
-    <td align="center">
-      <a href="https://github.com/KrittinWCHAT">
-        <img src="https://github.com/KrittinWCHAT.png" width="100px;" alt="Krittin_Thamjaroenkul"/><br />
-        <sub><b>Krittin_Thamjaroenkul</b></sub>
-      </a><br />
-      <sub>KrittinWCHAT</sub>
-    </td>
-    <td align="center">
+     <td align="center">
       <a href="https://claude.ai/code">
         <img src="https://avatars.githubusercontent.com/u/76263028" width="100px;" alt="Claude Code"/><br />
         <sub><b>Claude Code</b></sub>
