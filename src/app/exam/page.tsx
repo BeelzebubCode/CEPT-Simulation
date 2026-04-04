@@ -100,8 +100,9 @@ export default function AdaptiveExamPage() {
     setSpeaking(false);
   };
 
-  const submitAnswerAndGetNext = async () => {
-    if (!selectedChoiceId || !question || !attemptId) return;
+  const submitAnswerAndGetNext = async (overrideChoiceId?: string, blankChoiceIds?: string[]) => {
+    const choiceId = overrideChoiceId ?? selectedChoiceId;
+    if (!choiceId || !question || !attemptId) return;
     setLoading(true);
     stopSpeaking();
     setSectionChanged(false);
@@ -114,7 +115,8 @@ export default function AdaptiveExamPage() {
           action: 'answer',
           attemptId,
           questionId: question.id,
-          choiceId: selectedChoiceId,
+          choiceId,
+          ...(blankChoiceIds ? { blankChoiceIds } : {}),
           theta,
           answeredIds,
           currentSectionId,
@@ -308,13 +310,10 @@ export default function AdaptiveExamPage() {
           <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Q {qNum}</span>
           <button className="btn btn-primary" disabled={hasMultipleBlanks ? (!allBlanksAnswered || loading) : (!selectedChoiceId || loading)} onClick={() => {
             if (hasMultipleBlanks) {
-              // For fill-blank: pick the first choice as a token submission, scoring will be handled differently
-              const firstBlankChoiceId = Object.values(blankAnswers)[0];
-              setSelectedChoiceId(firstBlankChoiceId);
-              setTimeout(() => {
-                submitAnswerAndGetNext();
-                setBlankAnswers({});
-              }, 50);
+              // Send all blank choices for proper partial-credit scoring
+              const blankChoiceIds = Object.values(blankAnswers);
+              submitAnswerAndGetNext(blankChoiceIds[0], blankChoiceIds);
+              setBlankAnswers({});
             } else {
               submitAnswerAndGetNext();
             }

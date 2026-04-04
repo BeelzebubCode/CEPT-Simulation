@@ -9,7 +9,6 @@ function safeQuestion(q: { choices: { id: string; label: string; text: string; i
 }
 
 async function pickQuestion(sectionId: string, excludeIds: string[], preferDifficulty: string) {
-  // Try preferred difficulty first, then fallback to any in same section
   let q = await prisma.question.findFirst({
     where: { sectionId, id: { notIn: excludeIds }, difficulty: preferDifficulty as 'EASY' | 'MEDIUM' | 'HARD' },
     include: { choices: { orderBy: { order: 'asc' } } },
@@ -35,7 +34,6 @@ export async function POST(req: Request) {
     if (action === 'start') {
       const attempt = await prisma.examAttempt.create({ data: { mode: 'exam', ceptScore: 0 } });
 
-      // Get first section (by order)
       const firstSection = await prisma.section.findFirst({
         orderBy: { order: 'asc' },
         include: { questions: { where: { difficulty: 'MEDIUM' }, include: { choices: { orderBy: { order: 'asc' } } }, orderBy: { order: 'asc' }, take: 1 } },
@@ -62,27 +60,39 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
       }
 
-      // Check correctness & save
-      const choice = await prisma.choice.findUnique({ where: { id: choiceId } });
-      const isCorrect = choice?.isCorrect ?? false;
-      await prisma.answer.create({ data: { attemptId, questionId, choiceId, isCorrect } });
+      // blankChoiceIds: for fill-blank questions, all blank answers in order
+      // If not provided, treat as a single-answer question
+      const blankChoiceIds: string[] = Array.isArray(body.blankChoiceIds) ? body.blankChoiceIds : [choiceId];
 
-      // Update theta (IRT approximation)
+      // Save one Answer record per blank choice
+      const choices = await prisma.choice.findMany({ where: { id: { in: blankChoiceIds } } });
+      const choiceMap = new Map(choices.map(c => [c.id, c]));
+
+      await prisma.answer.createMany({
+        data: blankChoiceIds.map(cid => ({
+          attemptId,
+          questionId,
+          choiceId: cid,
+          isCorrect: choiceMap.get(cid)?.isCorrect ?? false,
+        })),
+      });
+
+      // Theta update based on first (or only) choice correctness
+      const firstCorrect = choiceMap.get(choiceId)?.isCorrect ?? false;
       const currentTheta = parseFloat(body.theta ?? 0);
-      const newTheta = isCorrect ? currentTheta + 0.5 : currentTheta - 0.3;
+      const newTheta = firstCorrect ? currentTheta + 0.5 : currentTheta - 0.3;
 
-      // Target difficulty based on theta
       let difficulty = 'MEDIUM';
       if (newTheta >= 1.5) difficulty = 'HARD';
       else if (newTheta <= -0.5) difficulty = 'EASY';
 
-      // Try to pick next question from the SAME section (only if under the per-section limit)
+      // Stay in same section if under limit
       if (sectionQCount < MAX_PER_SECTION) {
         const nextQ = await pickQuestion(currentSectionId, answeredIds, difficulty);
         if (nextQ) {
           const section = await prisma.section.findUnique({ where: { id: currentSectionId } });
           return NextResponse.json({
-            isCorrect,
+            isCorrect: firstCorrect,
             theta: newTheta,
             nextQuestion: safeQuestion(nextQ),
             currentSectionId,
@@ -93,7 +103,7 @@ export async function POST(req: Request) {
         }
       }
 
-      // Section hit 10-question limit (or exhausted) — move to next section
+      // Move to next section
       const currentSection = await prisma.section.findUnique({ where: { id: currentSectionId } });
       const nextSection = await prisma.section.findFirst({
         where: { order: { gt: currentSection?.order ?? 0 } },
@@ -104,7 +114,7 @@ export async function POST(req: Request) {
         const firstInNext = await pickQuestion(nextSection.id, answeredIds, 'MEDIUM');
         if (firstInNext) {
           return NextResponse.json({
-            isCorrect,
+            isCorrect: firstCorrect,
             theta: newTheta,
             nextQuestion: safeQuestion(firstInNext),
             currentSectionId: nextSection.id,
@@ -116,48 +126,42 @@ export async function POST(req: Request) {
       }
 
       // No more sections → exam done
-      return NextResponse.json({ isCorrect, theta: newTheta, nextQuestion: null });
+      return NextResponse.json({ isCorrect: firstCorrect, theta: newTheta, nextQuestion: null });
     }
 
     // ─── FINISH ───────────────────────────────────────────────────────────────
     if (action === 'finish') {
-      // Fetch answers together with the question's difficulty level
-      const answers = await prisma.answer.findMany({
-        where: { attemptId },
-        include: { question: { select: { difficulty: true } } },
-      });
+      const answers = await prisma.answer.findMany({ where: { attemptId } });
 
-      // Require at least 10 answered questions for a meaningful score
-      if (answers.length < 10) {
+      // Count unique questions answered (fill-blank has multiple Answer rows per question)
+      const uniqueQuestions = new Set(answers.map(a => a.questionId));
+
+      if (uniqueQuestions.size < 10) {
         return NextResponse.json(
           { error: 'ต้องตอบอย่างน้อย 10 ข้อก่อนส่งข้อสอบ' },
           { status: 400 },
         );
       }
 
-      const totalItems = answers.length;
+      // Score: 1 point per question
+      // Fill-blank: partial credit — correct_blanks / total_blanks (sums to 1)
+      let totalScore = 0;
+      for (const qId of uniqueQuestions) {
+        const qAnswers = answers.filter(a => a.questionId === qId);
+        if (qAnswers.length === 1) {
+          totalScore += qAnswers[0].isCorrect ? 1 : 0;
+        } else {
+          // Fill-blank partial credit: each blank = 1/N
+          const correct = qAnswers.filter(a => a.isCorrect).length;
+          totalScore += correct / qAnswers.length;
+        }
+      }
+
+      const score = Math.min(50, Math.round(totalScore));
       const correctCount = answers.filter(a => a.isCorrect).length;
+      const totalItems = uniqueQuestions.size;
 
-      if (totalItems === 0) {
-        return NextResponse.json({ score: 0, cefr: 'Below A1', totalItems: 0, correctCount: 0 });
-      }
-
-      // Weighted score: harder correct answers are worth more
-      const weights: Record<string, number> = { EASY: 0.8, MEDIUM: 1.0, HARD: 1.4 };
-      let earnedWeight = 0;
-      let maxWeight = 0;
-
-      for (const a of answers) {
-        const w = weights[a.question.difficulty] ?? 1.0;
-        maxWeight += w;
-        if (a.isCorrect) earnedWeight += w;
-      }
-
-      // Scale to 0–50
-      const ratio = maxWeight > 0 ? earnedWeight / maxWeight : 0;
-      const score = Math.min(50, Math.round(ratio * 50));
-
-      // CEFR mapping (score out of 50)
+      // CEFR mapping (out of 50)
       let cefr = 'Below A1';
       if (score >= 45) cefr = 'C2';
       else if (score >= 38) cefr = 'C1';
