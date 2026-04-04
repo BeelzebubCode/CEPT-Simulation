@@ -185,14 +185,54 @@ export default function PracticePage() {
       </header>
 
       {showSectionSelector && (
-        <div style={{ background: '#fff', borderBottom: '1px solid #e0e0e0', padding: 20, position: 'absolute', top: 60, left: 0, right: 0, zIndex: 90, boxShadow: '0 10px 20px rgba(0,0,0,0.05)' }}>
-           <div style={{ maxWidth: 900, margin: '0 auto', display: 'grid', gap: 10 }}>
-              {sections.map((s, idx) => (
-                <button key={s.id} onClick={() => handleSectionSwitch(idx)} style={{ textAlign: 'left', padding: '12px 16px', background: idx === secIdx ? '#e3f2fd' : 'transparent', border: '1px solid #ddd', borderRadius: 8, cursor: 'pointer', fontWeight: idx === secIdx ? 'bold' : 'normal', color: idx === secIdx ? '#1976d2' : '#333' }}>
-                    {s.name} <span style={{ float: 'right', opacity: 0.6 }}>{s.questions.filter(q => answers[q.id]).length} / {s.questions.length} done</span>
+        <div style={{
+          background: '#fff', borderBottom: '1px solid #e0e0e0',
+          padding: '12px 20px 16px', position: 'absolute', top: 60,
+          left: 0, right: 0, zIndex: 90, boxShadow: '0 8px 24px rgba(0,0,0,0.10)',
+        }}>
+          <p style={{ fontSize: 12, fontWeight: 700, color: '#9e9e9e', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 10, maxWidth: 900, margin: '0 auto 10px' }}>
+            เลือกหมวดข้อสอบ
+          </p>
+          <div style={{ maxWidth: 900, margin: '0 auto', display: 'grid', gap: 8 }}>
+            {sections.map((s, idx) => {
+              const done = s.questions.filter(q => answers[q.id]).length;
+              const total = s.questions.length;
+              const pct = total > 0 ? (done / total) * 100 : 0;
+              const active = idx === secIdx;
+              return (
+                <button key={s.id} onClick={() => handleSectionSwitch(idx)} style={{
+                  textAlign: 'left', padding: '14px 16px',
+                  background: active ? '#e3f2fd' : '#fafafa',
+                  border: `2px solid ${active ? '#1976d2' : '#e0e0e0'}`,
+                  borderRadius: 10, cursor: 'pointer',
+                  transition: 'all 0.18s ease',
+                  fontFamily: 'inherit',
+                }}
+                  onMouseEnter={e => { if (!active) (e.currentTarget as HTMLButtonElement).style.borderColor = '#90caf9'; }}
+                  onMouseLeave={e => { if (!active) (e.currentTarget as HTMLButtonElement).style.borderColor = '#e0e0e0'; }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <span style={{ fontWeight: 700, fontSize: 15, color: active ? '#1565c0' : '#212121' }}>
+                      {active && <span style={{ color: '#1976d2', marginRight: 6 }}>▶</span>}
+                      {s.name}
+                    </span>
+                    <span style={{
+                      fontSize: 12, fontWeight: 600,
+                      color: done === total && total > 0 ? '#2e7d32' : '#616161',
+                      background: done === total && total > 0 ? '#e8f5e9' : '#f0f0f0',
+                      padding: '3px 10px', borderRadius: 20,
+                    }}>
+                      {done === total && total > 0 ? '✓ ' : ''}{done} / {total} done
+                    </span>
+                  </div>
+                  {/* Progress bar */}
+                  <div style={{ height: 4, background: '#e0e0e0', borderRadius: 2, overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${pct}%`, borderRadius: 2, background: done === total && total > 0 ? '#2e7d32' : '#1976d2', transition: 'width 0.4s ease' }} />
+                  </div>
                 </button>
-              ))}
-           </div>
+              );
+            })}
+          </div>
         </div>
       )}
 
