@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+
+# Next.js
+.next/
+out/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Build
+*.tsbuildinfo
+next-env.d.ts
+
+# Prisma generated
+/src/generated/prisma
+
+# SQLite database
+*.db
+*.db-journal
+prisma/dev.db
+prisma/dev.db-journal
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# PDF source (large file)
+*.pdf
+
+# Uploads
+public/uploads/

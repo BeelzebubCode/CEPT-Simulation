@@ -1,0 +1,84 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SectionType {
+  LISTENING_TEXT
+  LISTENING_IMAGE
+  READING_SIGNS
+  READING_FILL_BLANK
+  READING_COMPREHENSION
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+model Section {
+  id          String      @id @default(cuid())
+  name        String
+  description String?
+  type        SectionType
+  timeLimit   Int
+  order       Int
+  questions   Question[]
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+model Question {
+  id         String     @id @default(cuid())
+  sectionId  String
+  section    Section    @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  text       String
+  passage    String?    @db.Text
+  speechText String?    @db.Text
+  imageUrl   String?
+  difficulty Difficulty @default(MEDIUM)
+  order      Int
+  choices    Choice[]
+  answers    Answer[]
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+}
+
+model Choice {
+  id          String   @id @default(cuid())
+  questionId  String
+  question    Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  label       String
+  text        String
+  imageUrl    String?
+  isCorrect   Boolean  @default(false)
+  order       Int
+  blankNumber Int      @default(1)
+}
+
+model ExamAttempt {
+  id          String    @id @default(cuid())
+  mode        String    @default("exam")
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+  totalScore  Int?
+  totalItems  Int?
+  ceptScore   Float?
+  cefrLevel   String?
+  answers     Answer[]
+}
+
+model Answer {
+  id         String      @id @default(cuid())
+  attemptId  String
+  attempt    ExamAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  questionId String
+  question   Question    @relation(fields: [questionId], references: [id])
+  choiceId   String
+  isCorrect  Boolean
+}

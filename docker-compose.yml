@@ -1,0 +1,16 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: cept_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: cept_exam
+      POSTGRES_USER: cept
+      POSTGRES_PASSWORD: cept_secret
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
