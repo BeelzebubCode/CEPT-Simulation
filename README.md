@@ -194,9 +194,3 @@ prisma/
 ## 🤝 Contributing
 
 Pull requests ยินดีต้อนรับครับ สำหรับ major changes กรุณาเปิด issue ก่อนเพื่อหารือ
-
----
-
-## 📄 License
-
-MIT © [BeelzebubCode](https://github.com/BeelzebubCode)
