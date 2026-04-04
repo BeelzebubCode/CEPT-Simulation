@@ -1,11 +1,13 @@
 'use client';
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, FileText, ArrowLeft, LogOut } from 'lucide-react';
+import { LayoutDashboard, FileText, ArrowLeft, LogOut, Menu, X } from 'lucide-react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Login page renders without the sidebar shell
   if (pathname === '/admin/login') {
@@ -22,24 +24,48 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     router.push('/admin/login');
   };
 
+  const closeSidebar = () => setSidebarOpen(false);
+
   return (
     <div className="admin-layout">
-      <aside className="admin-sidebar">
+      {/* Mobile top bar */}
+      <header className="admin-mobile-bar">
+        <button className="admin-hamburger" onClick={() => setSidebarOpen(true)} aria-label="Open menu">
+          <Menu size={22} />
+        </button>
+        <span style={{ fontWeight: 700, color: '#fff', fontSize: 16 }}>CEPT Admin</span>
+        <div style={{ width: 40 }} />
+      </header>
+
+      {/* Overlay (mobile only) */}
+      {sidebarOpen && (
+        <div className="admin-overlay" onClick={closeSidebar} />
+      )}
+
+      {/* Sidebar */}
+      <aside className={`admin-sidebar${sidebarOpen ? ' open' : ''}`}>
+        {/* Close button — visible on mobile */}
+        <button className="admin-sidebar-close" onClick={closeSidebar} aria-label="Close menu">
+          <X size={20} />
+        </button>
+
         <div className="admin-sidebar-logo">
           <div className="logo-mini" style={{ background: 'var(--admin-accent)' }}>CU</div>
           CEPT Admin
         </div>
+
         <nav className="admin-nav" style={{ flex: 1 }}>
           {links.map(l => (
-            <Link key={l.href} href={l.href}
+            <Link key={l.href} href={l.href} onClick={closeSidebar}
               className={l.exact ? (pathname === l.href ? 'active' : '') : (pathname.startsWith(l.href) ? 'active' : '')}>
               {l.icon} {l.label}
             </Link>
           ))}
-          <Link href="/" style={{ marginTop: 24, opacity: 0.6 }}>
+          <Link href="/" onClick={closeSidebar} style={{ marginTop: 24, opacity: 0.6 }}>
             <ArrowLeft size={14} /> Back to Exam
           </Link>
         </nav>
+
         <button
           onClick={handleLogout}
           style={{
@@ -52,6 +78,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <LogOut size={14} /> Sign out
         </button>
       </aside>
+
       <main className="admin-main">{children}</main>
     </div>
   );
