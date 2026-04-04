@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import prisma from '@/lib/prisma';
 
 function safeQuestion(q: { choices: { id: string; label: string; text: string; imageUrl: string | null; isCorrect: boolean; order: number; blankNumber: number; questionId: string }[]; [key: string]: unknown }) {
   const safeChoices = q.choices.map(c => ({
