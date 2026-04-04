@@ -163,11 +163,27 @@ export default function PracticePage() {
     <>
       <header className="top-bar">
         <div className="top-bar-inner">
-          <div className="top-bar-title" style={{ cursor: 'pointer' }} onClick={() => setShowSectionSelector(!showSectionSelector)}>
+          <div className="top-bar-title">
             <div className="logo-mini">CU</div>
-            <span>{sec.name} {showSectionSelector ? '▲' : '▼'}</span>
+            <span>Practice</span>
           </div>
-          <div style={{ display: 'flex', gap: 10 }}>
+          {/* Section selector button — always visible, clearly labelled */}
+          <button
+            onClick={() => setShowSectionSelector(!showSectionSelector)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)',
+              borderRadius: 8, color: '#fff', padding: '6px 12px',
+              cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, fontWeight: 600,
+              maxWidth: 200, overflow: 'hidden',
+            }}
+          >
+            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {sec.name}
+            </span>
+            <span style={{ flexShrink: 0 }}>{showSectionSelector ? '▲' : '▼'}</span>
+          </button>
+          <div style={{ display: 'flex', gap: 8 }}>
              <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => {
                 localStorage.removeItem('cept_practice_answers');
                 localStorage.removeItem('cept_practice_secIdx');
@@ -175,7 +191,7 @@ export default function PracticePage() {
                 setAnswers({});
                 setQIdx(0);
                 setSecIdx(0);
-             }}>Reset History</button>
+             }}>Reset</button>
              <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => router.push('/')}>Exit</button>
           </div>
         </div>
