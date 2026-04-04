@@ -11,7 +11,8 @@ export default function SectionEditor() {
   const { id } = useParams();
   const [section, setSection] = useState<Section | null>(null);
   const [editQ, setEditQ] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState<Partial<Question & { choices: Partial<Choice>[] }>>({});
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [editForm, setEditForm] = useState<{ text?: string; passage?: string; speechText?: string; imageUrl?: string; choices?: any[] }>({});
   const [saving, setSaving] = useState(false);
 
   const load = useCallback(() => {
@@ -160,7 +161,15 @@ export default function SectionEditor() {
                       if (blankChoices.length === 0) return null;
                       return (
                         <div key={bn} style={{ marginBottom: 16, padding: 12, backgroundColor: 'var(--admin-bg)', borderRadius: 8, border: '1px solid var(--admin-border)' }}>
-                          <div style={{ color: '#6366f1', fontSize: 13, fontWeight: 700, marginBottom: 8 }}>Blank [{bn}]</div>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                            <span style={{ color: '#6366f1', fontSize: 13, fontWeight: 700 }}>Blank [{bn}]</span>
+                            <button className="admin-btn admin-btn-primary" style={{ padding: '4px 10px', fontSize: 11 }} onClick={() => {
+                              const labels = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                              const nextLabel = labels[blankChoices.length] || labels[0];
+                              const newChoice = { label: nextLabel, text: '', isCorrect: false, order: (editForm.choices || []).length + 1, blankNumber: bn };
+                              setEditForm({ ...editForm, choices: [...(editForm.choices || []), newChoice] });
+                            }}><Plus size={10} /> Add</button>
+                          </div>
                           {blankChoices.map(c => {
                             const ci = (editForm.choices || []).indexOf(c);
                             return (
@@ -183,6 +192,11 @@ export default function SectionEditor() {
                                     }} />
                                   ✓
                                 </label>
+                                <button style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 4, fontSize: 14, fontWeight: 700 }}
+                                  onClick={() => {
+                                    const newChoices = (editForm.choices || []).filter((_, i) => i !== ci);
+                                    setEditForm({ ...editForm, choices: newChoices });
+                                  }}>✕</button>
                               </div>
                             );
                           })}
@@ -192,42 +206,55 @@ export default function SectionEditor() {
                   </>
                 ) : (
                   /* ─── STANDARD: flat choices ─── */
-                  editForm.choices?.map((c, ci) => (
-                    <div key={ci} style={{ marginBottom: 12, padding: 12, backgroundColor: 'var(--admin-bg)', borderRadius: 8, border: '1px solid var(--admin-border)' }}>
-                      <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: isListening ? 8 : 0 }}>
-                        <span style={{ color: '#fff', fontWeight: 700, width: 24 }}>{c.label}</span>
-                        <input className="admin-input" style={{ flex: 1 }} value={c.text || ''}
-                          onChange={e => {
-                            const newChoices = [...(editForm.choices || [])];
-                            newChoices[ci] = { ...newChoices[ci], text: e.target.value };
-                            setEditForm({ ...editForm, choices: newChoices });
-                          }} />
-                        <label style={{ color: '#94a3b8', fontSize: 12, display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                          <input type="radio" name="correct" checked={c.isCorrect || false}
-                            onChange={() => {
-                              const newChoices = (editForm.choices || []).map((ch, i) => ({ ...ch, isCorrect: i === ci }));
+                  <>
+                    {editForm.choices?.map((c, ci) => (
+                      <div key={ci} style={{ marginBottom: 12, padding: 12, backgroundColor: 'var(--admin-bg)', borderRadius: 8, border: '1px solid var(--admin-border)' }}>
+                        <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: isListening ? 8 : 0 }}>
+                          <span style={{ color: '#fff', fontWeight: 700, width: 24 }}>{c.label}</span>
+                          <input className="admin-input" style={{ flex: 1 }} value={c.text || ''}
+                            onChange={e => {
+                              const newChoices = [...(editForm.choices || [])];
+                              newChoices[ci] = { ...newChoices[ci], text: e.target.value };
                               setEditForm({ ...editForm, choices: newChoices });
                             }} />
-                          Correct
-                        </label>
-                      </div>
-                      {section?.type === 'LISTENING_IMAGE' && (
-                        <div style={{ marginTop: 8 }}>
-                          <label className="admin-label" style={{ fontSize: 11 }}><Image size={11} style={{ verticalAlign: 'middle', marginRight: 3 }} /> Choice Image</label>
-                          <input type="file" accept="image/*" onChange={async e => {
-                            const file = e.target.files?.[0];
-                            if (file) {
-                              const url = await uploadImage(file);
-                              const newChoices = [...(editForm.choices || [])];
-                              newChoices[ci] = { ...newChoices[ci], imageUrl: url };
+                          <label style={{ color: '#94a3b8', fontSize: 12, display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                            <input type="radio" name="correct" checked={c.isCorrect || false}
+                              onChange={() => {
+                                const newChoices = (editForm.choices || []).map((ch, i) => ({ ...ch, isCorrect: i === ci }));
+                                setEditForm({ ...editForm, choices: newChoices });
+                              }} />
+                            Correct
+                          </label>
+                          <button style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 4, fontSize: 14, fontWeight: 700 }}
+                            onClick={() => {
+                              const newChoices = (editForm.choices || []).filter((_, i) => i !== ci);
                               setEditForm({ ...editForm, choices: newChoices });
-                            }
-                          }} style={{ color: 'var(--admin-text)', fontSize: 12 }} />
-                          {c.imageUrl && <img src={c.imageUrl} alt="" style={{ maxWidth: 140, marginTop: 6, borderRadius: 6 }} />}
+                            }}>✕</button>
                         </div>
-                      )}
-                    </div>
-                  ))
+                        {section?.type === 'LISTENING_IMAGE' && (
+                          <div style={{ marginTop: 8 }}>
+                            <label className="admin-label" style={{ fontSize: 11 }}><Image size={11} style={{ verticalAlign: 'middle', marginRight: 3 }} /> Choice Image</label>
+                            <input type="file" accept="image/*" onChange={async e => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                const url = await uploadImage(file);
+                                const newChoices = [...(editForm.choices || [])];
+                                newChoices[ci] = { ...newChoices[ci], imageUrl: url };
+                                setEditForm({ ...editForm, choices: newChoices });
+                              }
+                            }} style={{ color: 'var(--admin-text)', fontSize: 12 }} />
+                            {c.imageUrl && <img src={c.imageUrl} alt="" style={{ maxWidth: 140, marginTop: 6, borderRadius: 6 }} />}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    <button className="admin-btn admin-btn-primary" style={{ marginTop: 4 }} onClick={() => {
+                      const labels = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                      const nextLabel = labels[(editForm.choices || []).length] || labels[0];
+                      const newChoice = { label: nextLabel, text: '', isCorrect: false, order: (editForm.choices || []).length + 1 };
+                      setEditForm({ ...editForm, choices: [...(editForm.choices || []), newChoice] });
+                    }}><Plus size={12} /> Add Choice</button>
+                  </>
                 )}
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
