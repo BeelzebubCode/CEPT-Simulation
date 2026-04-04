@@ -9,7 +9,6 @@
 [![Prisma](https://img.shields.io/badge/Prisma-6-2D3748?logo=prisma)](https://prisma.io)
 [![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?logo=supabase)](https://supabase.com)
 [![Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-000?logo=vercel)](https://cept-exam.vercel.app)
-[![License](https://img.shields.io/badge/License-MIT-blue)](#license)
 
 ระบบจำลองข้อสอบ CEPT แบบ Adaptive CAT พร้อม Practice Mode และ Admin Panel ครบวงจร
 
