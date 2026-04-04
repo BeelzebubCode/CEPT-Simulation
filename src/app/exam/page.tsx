@@ -301,7 +301,9 @@ export default function AdaptiveExamPage() {
       <nav className="nav-bar">
         <div className="nav-inner" style={{ justifyContent: 'space-between' }}>
           <div>
-            <button className="btn btn-secondary" onClick={() => setShowModal('submit')}>Submit Early</button>
+            {qNum > 10 && (
+              <button className="btn btn-secondary" onClick={() => setShowModal('submit')}>Submit Early</button>
+            )}
           </div>
           <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>Q {qNum}</span>
           <button className="btn btn-primary" disabled={hasMultipleBlanks ? (!allBlanksAnswered || loading) : (!selectedChoiceId || loading)} onClick={() => {

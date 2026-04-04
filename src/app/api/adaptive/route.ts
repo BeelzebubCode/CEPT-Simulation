@@ -127,6 +127,14 @@ export async function POST(req: Request) {
         include: { question: { select: { difficulty: true } } },
       });
 
+      // Require at least 10 answered questions for a meaningful score
+      if (answers.length < 10) {
+        return NextResponse.json(
+          { error: 'ต้องตอบอย่างน้อย 10 ข้อก่อนส่งข้อสอบ' },
+          { status: 400 },
+        );
+      }
+
       const totalItems = answers.length;
       const correctCount = answers.filter(a => a.isCorrect).length;
 
