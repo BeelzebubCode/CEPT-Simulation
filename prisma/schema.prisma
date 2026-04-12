@@ -41,7 +41,7 @@ model Question {
   text       String
   passage    String?    @db.Text
   speechText String?    @db.Text
-  imageUrl   String?
+  imageUrl   String?    @db.Text
   difficulty Difficulty @default(MEDIUM)
   order      Int
   choices    Choice[]
@@ -56,7 +56,7 @@ model Choice {
   question    Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
   label       String
   text        String
-  imageUrl    String?
+  imageUrl    String?   @db.Text
   isCorrect   Boolean  @default(false)
   order       Int
   blankNumber Int      @default(1)

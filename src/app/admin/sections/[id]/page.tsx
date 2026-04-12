@@ -2,7 +2,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { Volume2, Save, Plus, Pencil, Trash2, Image, CheckCircle, XCircle } from 'lucide-react';
-import { upload } from '@vercel/blob/client';
 
 interface Choice { id: string; label: string; text: string; imageUrl?: string; isCorrect: boolean; order: number; blankNumber?: number; }
 interface Question { id: string; text: string; passage?: string; speechText?: string; imageUrl?: string; order: number; choices: Choice[]; }
@@ -92,8 +91,15 @@ export default function SectionEditor() {
   };
 
   const uploadImage = async (file: File) => {
-    const blob = await upload(file.name, file, { access: 'public', handleUploadUrl: '/api/upload' });
-    return blob.url;
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await fetch('/api/upload', { method: 'POST', body: formData });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.error || 'Upload failed');
+    }
+    const data = await res.json();
+    return data.url;
   };
 
   if (!section) {

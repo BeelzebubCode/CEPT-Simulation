@@ -11,7 +11,7 @@ const prisma = new PrismaClient();
 type Difficulty = 'EASY' | 'MEDIUM' | 'HARD';
 
 /* ───────────────────── helpers ───────────────────── */
-async function getSection(type: string) {
+async function getSection(type: 'LISTENING_TEXT' | 'LISTENING_IMAGE' | 'READING_SIGNS' | 'READING_FILL_BLANK' | 'READING_COMPREHENSION') {
   const s = await prisma.section.findFirst({ where: { type } });
   if (!s) throw new Error(`Section ${type} not found`);
   return s;

@@ -1,27 +1,20 @@
-import { handleUpload, type HandleUploadBody } from '@vercel/blob/client';
 import { NextResponse } from 'next/server';
 import { isAdminRequest } from '@/lib/auth';
 
 const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
-const ALLOWED_TYPES = [
-  'image/jpeg',
-  'image/png',
-  'image/gif',
-  'image/webp',
-];
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
 // Allowed image signatures (magic bytes)
 const IMAGE_SIGNATURES: { bytes: number[]; ext: string }[] = [
-  { bytes: [0xff, 0xd8, 0xff],                   ext: 'jpg' }, // JPEG
-  { bytes: [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a], ext: 'png' }, // PNG
-  { bytes: [0x47, 0x49, 0x46, 0x38],              ext: 'gif' }, // GIF
-  { bytes: [0x52, 0x49, 0x46, 0x46],              ext: 'webp' }, // WebP (RIFF header)
+  { bytes: [0xff, 0xd8, 0xff],                   ext: 'jpg' },
+  { bytes: [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a], ext: 'png' },
+  { bytes: [0x47, 0x49, 0x46, 0x38],              ext: 'gif' },
+  { bytes: [0x52, 0x49, 0x46, 0x46],              ext: 'webp' },
 ];
 
 function detectImageType(buf: Uint8Array): string | null {
   for (const sig of IMAGE_SIGNATURES) {
     if (sig.bytes.every((b, i) => buf[i] === b)) {
-      // Extra check for WebP: bytes 8-11 must be "WEBP"
       if (sig.ext === 'webp') {
         const marker = [0x57, 0x45, 0x42, 0x50];
         if (!marker.every((b, i) => buf[8 + i] === b)) continue;
@@ -33,42 +26,60 @@ function detectImageType(buf: Uint8Array): string | null {
 }
 
 /**
- * Client-upload flow via @vercel/blob.
- * The browser calls this endpoint twice:
- *   1. To request a short-lived upload token  (handled by onBeforeGenerateToken)
- *   2. On completion notification              (handled by onUploadCompleted)
+ * Direct upload — receives FormData with a "file" field,
+ * validates it, and returns a base64 data URL.
+ * Works on Vercel (no filesystem needed) and locally.
  */
 export async function POST(request: Request): Promise<NextResponse> {
-  const body = (await request.json()) as HandleUploadBody;
+  // Auth check
+  if (!(await isAdminRequest(request))) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
   try {
-    const jsonResponse = await handleUpload({
-      body,
-      request,
-      onBeforeGenerateToken: async (pathname, clientPayload, multipart) => {
-        // ── Auth: only admins may upload ──
-        if (!(await isAdminRequest(request))) {
-          throw new Error('Unauthorized');
-        }
+    const formData = await request.formData();
+    const file = formData.get('file');
 
-        return {
-          allowedContentTypes: ALLOWED_TYPES,
-          maximumSizeInBytes: MAX_SIZE,
-          tokenPayload: clientPayload,        // forward any client metadata
-        };
-      },
-      onUploadCompleted: async ({ blob }) => {
-        // Optional: you could persist blob.url to the DB here.
-        // For now we just let the client handle it via the returned URL.
-        console.log('[blob] upload completed:', blob.url);
-      },
-    });
+    if (!file || !(file instanceof File)) {
+      return NextResponse.json({ error: 'No file provided' }, { status: 400 });
+    }
 
-    return NextResponse.json(jsonResponse);
+    // Validate MIME type
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      return NextResponse.json(
+        { error: `Invalid file type: ${file.type}. Allowed: ${ALLOWED_TYPES.join(', ')}` },
+        { status: 400 },
+      );
+    }
+
+    // Validate size
+    if (file.size > MAX_SIZE) {
+      return NextResponse.json(
+        { error: `File too large. Maximum: ${MAX_SIZE / 1024 / 1024}MB` },
+        { status: 400 },
+      );
+    }
+
+    // Read bytes & validate magic bytes
+    const buffer = new Uint8Array(await file.arrayBuffer());
+    const detectedType = detectImageType(buffer);
+    if (!detectedType) {
+      return NextResponse.json(
+        { error: 'File content does not match any supported image format' },
+        { status: 400 },
+      );
+    }
+
+    // Convert to base64 data URL
+    const base64 = Buffer.from(buffer).toString('base64');
+    const dataUrl = `data:${file.type};base64,${base64}`;
+
+    return NextResponse.json({ url: dataUrl });
   } catch (error) {
+    console.error('[upload] error:', error);
     return NextResponse.json(
       { error: (error as Error).message },
-      { status: 400 },
+      { status: 500 },
     );
   }
 }
