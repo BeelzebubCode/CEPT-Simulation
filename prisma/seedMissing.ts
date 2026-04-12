@@ -49,9 +49,6 @@ const missingListeningText = [
   { text: "Which day is Jimmy's guitar lesson?", difficulty: 'EASY' as Difficulty,
     speechText: "Mother: Jimmy has his guitar lesson every Thursday after school. His teacher Mr Hendricks comes to the house at four o'clock. Jimmy always looks forward to Thursdays.",
     choices: [{ label: 'A', text: 'Thursday', isCorrect: true },{ label: 'B', text: 'Tuesday', isCorrect: false },{ label: 'C', text: 'Wednesday', isCorrect: false },{ label: 'D', text: 'Friday', isCorrect: false }] },
-  { text: 'What does the woman like about Holidays in Europe?', difficulty: 'MEDIUM' as Difficulty,
-    speechText: "Woman: It's a wonderful guide overall. I love the beautiful photographs and the descriptions are excellent. The only problem is the maps — they're quite small and hard to read.",
-    choices: [{ label: 'A', text: 'the photographs', isCorrect: true },{ label: 'B', text: 'the maps', isCorrect: false },{ label: 'C', text: 'the price', isCorrect: false },{ label: 'D', text: 'the index', isCorrect: false }] },
 ];
 
 /* ================================================================
