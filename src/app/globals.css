@@ -173,8 +173,8 @@ body {
 @keyframes cardIn { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
 @keyframes fadeUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
 .question-number { display: inline-flex; align-items: center; justify-content: center;
-  width: 36px; height: 36px; background: var(--primary); color: #fff; border-radius: 10px;
-  font-size: 15px; font-weight: 700; margin-bottom: 16px; }
+  min-width: 36px; height: 36px; padding: 0 14px; background: var(--primary); color: #fff; border-radius: 10px;
+  font-size: 14px; font-weight: 700; margin-bottom: 16px; white-space: nowrap; }
 .question-text { font-size: 16px; font-weight: 500; line-height: 1.7; margin-bottom: 24px; }
 .question-passage { background: #f8f9fa; border-left: 4px solid var(--accent); padding: 16px 20px;
   margin-bottom: 20px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
@@ -451,4 +451,10 @@ body {
 
   /* Timer dots */
   .q-dot { width: 24px; height: 24px; font-size: 10px; }
+
+  /* Question number badge */
+  .question-number { font-size: 12px; height: 30px; padding: 0 10px; }
+
+  /* Passage view on mobile */
+  .question-passage { font-size: 13px; line-height: 1.7; padding: 12px 14px; }
 }

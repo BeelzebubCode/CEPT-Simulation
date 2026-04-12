@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Volume2, VolumeX, Image, ChevronLeft, ChevronRight, CheckCircle, XCircle } from 'lucide-react';
+import { Volume2, VolumeX, Image, ChevronLeft, ChevronRight, CheckCircle, XCircle, Sparkles } from 'lucide-react';
 
 interface Choice { id: string; label: string; text: string; imageUrl?: string; isCorrect: boolean; order: number; blankNumber?: number; }
 interface Question { id: string; text: string; passage?: string; speechText?: string; imageUrl?: string; order: number; choices: Choice[]; }
@@ -189,7 +189,7 @@ export default function PracticePage() {
       <header className="top-bar">
         <div className="top-bar-inner">
           <div className="top-bar-title">
-            <div className="logo-mini">CU</div>
+            <div className="logo-mini"><Sparkles size={16} /></div>
             <span>Practice</span>
           </div>
           {/* Section selector button — always visible, clearly labelled */}

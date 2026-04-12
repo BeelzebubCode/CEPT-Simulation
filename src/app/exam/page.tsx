@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Clock, Volume2, VolumeX, Image, Upload, ChevronRight, AlarmClock } from 'lucide-react';
+import { Clock, Volume2, VolumeX, Image, Upload, ChevronRight, AlarmClock, Sparkles } from 'lucide-react';
 
 interface Choice { id: string; label: string; text: string; imageUrl?: string; blankNumber?: number; }
 interface Question { id: string; text: string; passage?: string; speechText?: string; imageUrl?: string; choices: Choice[]; sectionId?: string; type?: string; }
@@ -193,7 +193,7 @@ export default function AdaptiveExamPage() {
       <header className="top-bar">
         <div className="top-bar-inner">
           <div className="top-bar-title">
-            <div className="logo-mini">CU</div>
+            <div className="logo-mini"><Sparkles size={16} /></div>
             <span>CEPT Exam</span>
           </div>
           <div className={`timer-display${timeLeft < 300 ? ' warning' : ''}`}>

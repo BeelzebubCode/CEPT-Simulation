@@ -1,11 +1,11 @@
 import Link from 'next/link';
-import { BookOpen, GraduationCap, ArrowRight, Activity, Clock } from 'lucide-react';
+import { BookOpen, GraduationCap, ArrowRight, Activity, Clock, Sparkles } from 'lucide-react';
 
 export default function Home() {
   return (
     <div className="landing">
       <div className="landing-content">
-        <div className="landing-logo">CU</div>
+        <div className="landing-logo"><Sparkles size={48} /></div>
         <h1 className="landing-title">CEPT Exam Simulation</h1>
         <p className="landing-subtitle">CEPT Practice Simulation</p>
         
