@@ -2,22 +2,22 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LayoutDashboard, FileText, ArrowLeft, LogOut, Menu, X } from 'lucide-react';
+import { LayoutDashboard, Layers, ArrowLeft, LogOut, Menu, X } from 'lucide-react';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Login page renders without the sidebar shell
-  if (pathname === '/admin/login') {
-    return <>{children}</>;
-  }
+  if (pathname === '/admin/login') return <>{children}</>;
 
-  const links = [
-    { href: '/admin', label: 'Dashboard', icon: <LayoutDashboard size={16} />, exact: true },
-    { href: '/admin/sections', label: 'Sections', icon: <FileText size={16} />, exact: false },
+  const navLinks = [
+    { href: '/admin',          label: 'Dashboard', icon: <LayoutDashboard size={16} />, exact: true },
+    { href: '/admin/sections', label: 'Sections',  icon: <Layers size={16} />,          exact: false },
   ];
+
+  const isActive = (href: string, exact: boolean) =>
+    exact ? pathname === href : pathname.startsWith(href);
 
   const handleLogout = async () => {
     await fetch('/api/admin/logout', { method: 'POST' });
@@ -31,52 +31,60 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
       {/* Mobile top bar */}
       <header className="admin-mobile-bar">
         <button className="admin-hamburger" onClick={() => setSidebarOpen(true)} aria-label="Open menu">
-          <Menu size={22} />
+          <Menu size={20} />
         </button>
-        <span style={{ fontWeight: 700, color: '#fff', fontSize: 16 }}>CEPT Admin</span>
+        <span style={{ fontWeight: 700, color: '#fff', fontSize: 15 }}>CEPT Admin</span>
         <div style={{ width: 40 }} />
       </header>
 
-      {/* Overlay (mobile only) */}
-      {sidebarOpen && (
-        <div className="admin-overlay" onClick={closeSidebar} />
-      )}
+      {sidebarOpen && <div className="admin-overlay" onClick={closeSidebar} />}
 
       {/* Sidebar */}
       <aside className={`admin-sidebar${sidebarOpen ? ' open' : ''}`}>
-        {/* Close button — visible on mobile */}
         <button className="admin-sidebar-close" onClick={closeSidebar} aria-label="Close menu">
-          <X size={20} />
+          <X size={18} />
         </button>
 
+        {/* Logo */}
         <div className="admin-sidebar-logo">
-          <div className="logo-mini" style={{ background: 'var(--admin-accent)' }}>CU</div>
-          CEPT Admin
+          <div style={{
+            width: 34, height: 34, borderRadius: 9, flexShrink: 0,
+            background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 12, fontWeight: 900, color: '#fff',
+            boxShadow: '0 4px 12px rgba(59,130,246,0.3)',
+          }}>
+            CU
+          </div>
+          <div className="admin-sidebar-logo-text">
+            <strong>CEPT Admin</strong>
+            <span>Exam Management</span>
+          </div>
         </div>
 
-        <nav className="admin-nav" style={{ flex: 1 }}>
-          {links.map(l => (
-            <Link key={l.href} href={l.href} onClick={closeSidebar}
-              className={l.exact ? (pathname === l.href ? 'active' : '') : (pathname.startsWith(l.href) ? 'active' : '')}>
+        {/* Nav */}
+        <nav className="admin-nav">
+          {navLinks.map(l => (
+            <Link
+              key={l.href}
+              href={l.href}
+              onClick={closeSidebar}
+              className={isActive(l.href, l.exact) ? 'active' : ''}
+            >
               {l.icon} {l.label}
             </Link>
           ))}
-          <Link href="/" onClick={closeSidebar} style={{ marginTop: 24, opacity: 0.6 }}>
-            <ArrowLeft size={14} /> Back to Exam
-          </Link>
         </nav>
 
-        <button
-          onClick={handleLogout}
-          style={{
-            width: '100%', background: 'none', border: '1px solid var(--admin-border)',
-            borderRadius: 8, color: '#94a3b8', padding: '10px 12px', cursor: 'pointer',
-            display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, fontFamily: 'inherit',
-            marginTop: 16,
-          }}
-        >
-          <LogOut size={14} /> Sign out
-        </button>
+        {/* Footer */}
+        <div className="admin-sidebar-footer">
+          <Link href="/" onClick={closeSidebar}>
+            <ArrowLeft size={15} /> Back to Exam
+          </Link>
+          <button onClick={handleLogout}>
+            <LogOut size={15} /> Sign out
+          </button>
+        </div>
       </aside>
 
       <main className="admin-main">{children}</main>

@@ -1,9 +1,14 @@
+import { handleUpload, type HandleUploadBody } from '@vercel/blob/client';
 import { NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'fs/promises';
-import path from 'path';
 import { isAdminRequest } from '@/lib/auth';
 
 const MAX_SIZE = 5 * 1024 * 1024; // 5 MB
+const ALLOWED_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/gif',
+  'image/webp',
+];
 
 // Allowed image signatures (magic bytes)
 const IMAGE_SIGNATURES: { bytes: number[]; ext: string }[] = [
@@ -27,44 +32,43 @@ function detectImageType(buf: Uint8Array): string | null {
   return null;
 }
 
-export async function POST(req: Request) {
-  if (!(await isAdminRequest(req))) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+/**
+ * Client-upload flow via @vercel/blob.
+ * The browser calls this endpoint twice:
+ *   1. To request a short-lived upload token  (handled by onBeforeGenerateToken)
+ *   2. On completion notification              (handled by onUploadCompleted)
+ */
+export async function POST(request: Request): Promise<NextResponse> {
+  const body = (await request.json()) as HandleUploadBody;
+
+  try {
+    const jsonResponse = await handleUpload({
+      body,
+      request,
+      onBeforeGenerateToken: async (pathname, clientPayload, multipart) => {
+        // ── Auth: only admins may upload ──
+        if (!(await isAdminRequest(request))) {
+          throw new Error('Unauthorized');
+        }
+
+        return {
+          allowedContentTypes: ALLOWED_TYPES,
+          maximumSizeInBytes: MAX_SIZE,
+          tokenPayload: clientPayload,        // forward any client metadata
+        };
+      },
+      onUploadCompleted: async ({ blob }) => {
+        // Optional: you could persist blob.url to the DB here.
+        // For now we just let the client handle it via the returned URL.
+        console.log('[blob] upload completed:', blob.url);
+      },
+    });
+
+    return NextResponse.json(jsonResponse);
+  } catch (error) {
+    return NextResponse.json(
+      { error: (error as Error).message },
+      { status: 400 },
+    );
   }
-
-  const formData = await req.formData();
-  const file = formData.get('file') as File | null;
-  if (!file) return NextResponse.json({ error: 'No file' }, { status: 400 });
-
-  if (file.size > MAX_SIZE) {
-    return NextResponse.json({ error: 'File too large (max 5 MB)' }, { status: 413 });
-  }
-
-  const bytes = await file.arrayBuffer();
-  const buffer = Buffer.from(bytes);
-
-  // Validate file contents via magic bytes — ignore the client-supplied MIME type
-  const ext = detectImageType(new Uint8Array(buffer));
-  if (!ext) {
-    return NextResponse.json({ error: 'Only JPEG, PNG, GIF, and WebP images are allowed' }, { status: 415 });
-  }
-
-  const uploadDir = path.join(process.cwd(), 'public', 'uploads');
-  await mkdir(uploadDir, { recursive: true });
-
-  // Sanitise filename: strip directory traversal, keep only safe chars, force correct extension
-  const baseName = file.name
-    .replace(/\.\./g, '')
-    .replace(/[^a-zA-Z0-9._-]/g, '')
-    .replace(/\.[^.]+$/, '');        // strip original extension
-  const filename = `${Date.now()}-${baseName || 'upload'}.${ext}`;
-  const filepath = path.join(uploadDir, filename);
-
-  // Confirm the resolved path stays inside uploadDir (path traversal guard)
-  if (!filepath.startsWith(uploadDir + path.sep)) {
-    return NextResponse.json({ error: 'Invalid filename' }, { status: 400 });
-  }
-
-  await writeFile(filepath, buffer);
-  return NextResponse.json({ url: `/uploads/${filename}` });
 }

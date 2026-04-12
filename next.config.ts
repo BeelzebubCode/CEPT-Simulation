@@ -21,9 +21,9 @@ const securityHeaders = [
       "default-src 'self'",
       "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // Next.js needs both for dev+prod
       "style-src 'self' 'unsafe-inline'",                // inline styles used throughout
-      "img-src 'self' data: blob:",                      // /uploads/, data URIs, blob preview
+      "img-src 'self' data: blob: https://*.public.blob.vercel-storage.com", // Vercel Blob, data URIs, blob preview
       "font-src 'self'",
-      "connect-src 'self'",                              // fetch() only to own origin
+      "connect-src 'self' https://*.public.blob.vercel-storage.com", // fetch() + Vercel Blob upload
       "media-src 'none'",
       "object-src 'none'",
       "frame-src 'none'",
