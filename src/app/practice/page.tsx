@@ -211,11 +211,10 @@ export default function PracticePage() {
           <div style={{ display: 'flex', gap: 8 }}>
              <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => {
                 localStorage.removeItem('cept_practice_answers');
-                localStorage.removeItem('cept_practice_secIdx');
                 localStorage.removeItem('cept_practice_qIdx');
                 setAnswers({});
+                setBlankAnswers({});
                 setQIdx(0);
-                setSecIdx(0);
              }}>Reset</button>
              <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => router.push('/')}>Exit</button>
           </div>
