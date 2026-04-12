@@ -1,0 +1,714 @@
+ID: cmnkaexoe000288vhie2hm6va
+Q: At the beginning of a radio play, you hear a girl leaving a message for her friend. Where is the speaker?
+[ ] at home
+[*] in a car
+[ ] in a park
+[ ] at school
+Original Speech: Hi Sarah, it's me Lucy. I'm stuck in traffic right now, sitting here in the car, and I don't think I'm going to make it to your place on time.
+
+ID: cmnkaeyg6000888vhcm52khu5
+Q: At the moment, the shopping centre sells:
+[*] clothes
+[ ] electronics
+[ ] furniture
+[ ] food
+Original Speech: Welcome to Riverside Shopping Centre! This week we have amazing offers across our fashion departments. All clothes are now thirty percent off.
+
+ID: cmnkaeyxl000e88vh0k269b0l
+Q: For his most recent television program, John:
+[ ] visited Africa
+[ ] studied animals in a zoo
+[ ] made a film about rivers
+[*] went to the Pacific Ocean for a year
+Original Speech: For his latest documentary, John spent an entire year travelling across the Pacific Ocean, visiting remote islands and studying marine life.
+
+ID: cmnkaezf0000k88vhfnlyja9m
+Q: Frank finds ships quickly because he:
+[ ] has many years of experience
+[ ] asks local fishermen
+[*] uses the latest equipment
+[ ] reads old books
+Original Speech: Frank has been diving for shipwrecks for over twenty years. His secret? Technology. He uses the latest sonar equipment and GPS systems.
+
+ID: cmnkaezwa000q88vhe92l1jwx
+Q: From Edinburgh, the campsite is:
+[ ] 20 miles
+[*] 40 miles
+[ ] 60 miles
+[ ] 80 miles
+Original Speech: The campsite is located in the Scottish Highlands, about forty miles north of Edinburgh. It takes roughly an hour to drive there.
+
+ID: cmnkaf0dp000w88vhebpf7cgd
+Q: How is the station's gym different from other city gyms?
+[ ] It has more equipment
+[*] It is not so expensive
+[ ] It is bigger
+[ ] It has a swimming pool
+Original Speech: Station Fitness offers all the same equipment at a fraction of the cost. Our monthly membership is just twenty pounds, making us the most affordable gym.
+
+ID: cmnkaf0v1001288vhk6meph7e
+Q: How much does Philip pay for the photography?
+[ ] £50
+[*] £75
+[ ] £100
+[ ] £120
+Original Speech: Philip signed up for the evening photography course. The course runs for ten weeks and costs seventy-five pounds, which includes all materials.
+
+ID: cmnkaf1cg001888vhv7ou78zc
+Q: Jamie agrees to move into the new flat on:
+[ ] Saturday
+[*] Sunday
+[ ] Monday
+[ ] Friday
+Original Speech: Jamie: I can't do Saturday, I'm helping my parents. How about Sunday? Landlord: Sunday works. I'll have the keys ready. Jamie: Great, see you Sunday then.
+
+ID: cmnkaf1tu001e88vh6zixj1ro
+Q: On her first flight alone, Jane didn't:
+[ ] feel confident
+[*] recognize the white house she was looking for
+[ ] land safely
+[ ] follow the route
+Original Speech: Jane was nervous on her first solo flight. She was supposed to spot a white house as a landmark, but from the air everything looked so different she couldn't recognize it.
+
+ID: cmnkaf2b5001k88vhjuddk9mo
+Q: On the news you hear a story about a cat. Where was the cat found?
+[*] in a train carriage
+[ ] in a garden
+[ ] on a rooftop
+[ ] in a shop
+Original Speech: A remarkable rescue today as railway workers discovered a small ginger cat hiding inside a train carriage. The cat had apparently travelled over two hundred miles.
+
+ID: cmnkaf2sj001q88vhukrx8b1r
+Q: On weekdays, a visit to the park costs:
+[*] $12
+[ ] $15
+[ ] $8
+[ ] $20
+Original Speech: Admission prices: twelve dollars for adults on weekdays, fifteen dollars at weekends. Children under five go free.
+
+ID: cmnkaf39v001w88vhvbqdoi7j
+Q: Peter failed the test because he:
+[ ] was too nervous
+[ ] drove the wrong way
+[*] didn't stop at the traffic lights
+[ ] drove too fast
+Original Speech: Poor Peter. He was doing well during his driving test until the light turned red but he just drove straight through without stopping.
+
+ID: cmnkaf3r6002288vh057kaeew
+Q: Roger thinks the best time to go to the campsite is:
+[ ] spring
+[*] autumn
+[ ] summer
+[ ] winter
+Original Speech: For me, autumn is perfect. The leaves are changing colour, the air is crisp, and there are far fewer people around.
+
+ID: cmnkaf48m002888vhjrmqgfmn
+Q: Sarah earns enough money from her painting for:
+[ ] a comfortable living
+[ ] a holiday abroad
+[*] pay for her artist's materials
+[ ] rent a studio
+Original Speech: Sarah sells a few paintings each month. It's not enough to live on, but it covers the cost of her canvases, paints and brushes, which is all she needs.
+
+ID: cmnkaf4q3002e88vhf1uziif4
+Q: The A-Z of Photography will not interest experienced photographers because:
+[*] the information is unsuitable
+[ ] it is too expensive
+[ ] it has no pictures
+[ ] it is out of date
+Original Speech: This book is ideal for beginners, but experienced photographers will find the information too basic and unsuitable for their level.
+
+ID: cmnkaf57d002k88vhpbq9zhw7
+Q: The first old ship which Frank found was:
+[ ] in deep water
+[ ] very old
+[*] easy to find
+[ ] full of treasure
+Original Speech: My very first wreck was just off the coast. The local fishermen had known about it for years. I just dived down and there it was. It was remarkably easy to find.
+
+ID: cmnkaf5op002q88vhpeodq9ib
+Q: The magazine is different to a local newspaper because of:
+[ ] its price
+[ ] its size
+[*] what it contains
+[ ] how often it is published
+Original Speech: Unlike the local newspaper, our magazine features in-depth articles, interviews, and creative writing. It's really about what it contains that sets it apart.
+
+ID: cmnkaf667002w88vhzqii7d3o
+Q: The presenter likes Cooking for One because:
+[ ] the recipes are simple
+[ ] it has photos
+[ ] it is cheap
+[*] she now likes cooking
+Original Speech: I used to hate cooking, but after reading this book everything changed. Now I actually enjoy spending time in the kitchen. It's completely transformed my attitude.
+
+ID: cmnkaf6nj003288vhy8uihcnd
+Q: What do the man and woman agree about?
+[ ] Farms are dangerous
+[ ] Farms are good for the economy
+[*] Birds are unlikely to be affected by farms
+[ ] Birds should be protected
+Original Speech: Man: I'm worried these wind farms might affect the bird population. Woman: Actually, the evidence suggests birds are unlikely to be affected. Man: Yes, I saw that too.
+
+ID: cmnkaf74w003888vhbxgxhy2s
+Q: What does Frank say about the ship called The Seabird?
+[ ] It was very large
+[*] It sank in a storm
+[ ] It carried passengers
+[ ] It was never found
+Original Speech: The Seabird was a merchant vessel. Records show she went down during a terrible storm in 1842. All hands were lost. A real tragedy.
+
+ID: cmnkaf7m7003e88vh7rprd8gg
+Q: What does the woman think is wrong with Holidays in Europe?
+[ ] It is too long
+[*] The maps are not very good
+[ ] The photos are poor
+[ ] It is too expensive
+Original Speech: It's a nice book overall, but the maps are really disappointing. They're small and hard to read. That's my main criticism.
+
+ID: cmnkaf871003k88vhl3llv7az
+Q: What happened to Jane on her test flight?
+[*] She almost hit something
+[ ] She got lost
+[ ] She ran out of fuel
+[ ] She landed in the wrong place
+Original Speech: It was terrifying. I was flying low over the hills and suddenly there was a tower right in front of me. I pulled up just in time. I almost hit it.
+
+ID: cmnkaf8oi003q88vhseq3fex9
+Q: What has Roger been working on recently at a zoo?
+[ ] a new enclosure
+[*] a survey of native species
+[ ] a breeding program
+[ ] a visitor guide
+Original Speech: At the zoo, I've been conducting a survey of native species. We're tracking which ones are thriving and which need more support.
+
+ID: cmnkaf95x003w88vhr6l2l39a
+Q: What has the man just bought?
+[ ] a bicycle
+[ ] a house
+[*] a car
+[ ] a phone
+Original Speech: Man: Look at this! Just picked it up from the dealer. Woman: A new car? That's exciting! Man: Well, second-hand, but it drives beautifully.
+
+ID: cmnkaf9na004288vhvmk4f4d3
+Q: What should people do at the moment?
+[*] keep away from the area
+[ ] call the police
+[ ] stay indoors
+[ ] evacuate
+Original Speech: This is an emergency announcement. Due to a chemical spill, residents are advised to keep away from the area. Police have set up roadblocks.
+
+ID: cmnkafa4n004888vhejsyen86
+Q: What time do the photography classes begin?
+[ ] 6.00 p.m.
+[ ] 6.30 p.m.
+[*] 6.45 p.m.
+[ ] 7.00 p.m.
+Original Speech: The photography classes run every Tuesday evening. Registration opens at half past six, and the class itself starts at quarter to seven.
+
+ID: cmnkafaly004e88vh5spr0p1o
+Q: What type of information is the radio reporter giving?
+[ ] sports results
+[ ] traffic report
+[*] weather forecast
+[ ] breaking news
+Original Speech: And now for today's forecast. Cloudy skies throughout the morning with rain moving in from the west later. Temperatures around twelve degrees.
+
+ID: cmnkafbtq004k88vh0znz642a
+Q: When she was at primary school, Sarah:
+[ ] painted watercolours
+[ ] made clay models
+[ ] took photographs
+[*] drew scenes in pencil
+Original Speech: Sarah always loved art. Even at primary school, she would sit for hours drawing scenes with just a pencil. Her teachers said she had real talent.
+
+ID: cmnkafclb004q88vhlw2cmbqs
+Q: Where does the band perform most regularly?
+[ ] in a concert hall
+[*] on a boat
+[ ] in a pub
+[ ] at a festival
+Original Speech: We play all sorts of venues, but our regular gig is on a boat. Every Friday night we set up on the river cruise and play for three hours.
+
+ID: cmnkafd2k004w88vh32llbtqs
+Q: Why did Steve and his band leave their recording company?
+[ ] They wanted more money
+[*] It wanted more control of the band's music
+[ ] They moved to another city
+[ ] The company closed down
+Original Speech: The record label kept trying to change our sound. They wanted more control over what songs we recorded. In the end, we decided to go independent.
+
+ID: cmnkafdjn005288vhwn3vh988
+Q: Why was Bob chosen to join the band?
+[ ] He could play guitar
+[*] They were looking for a singer
+[ ] He wrote great songs
+[ ] He was already famous
+Original Speech: We needed a new vocalist. Bob turned up to the audition and his voice was exactly what we were looking for. We were looking for a singer and he was perfect.
+
+ID: cmnkafe11005888vhb5tfq8fr
+Q: You hear a man talking on the phone about buying a house. What is the purpose of his call?
+[ ] to make a complaint
+[ ] to arrange a viewing
+[*] to obtain information
+[ ] to make an offer
+Original Speech: Hello, I'm calling about the property on Park Avenue. Could you tell me about the council tax band? And is there off-street parking?
+
+ID: cmnkafeig005e88vhvbwwyecf
+Q: You hear a man talking to people at the beginning of a course. What is his main point?
+[*] the benefits of the course
+[ ] the rules of the course
+[ ] the cost of the course
+[ ] the schedule
+Original Speech: Welcome everyone. Over the next few weeks, you'll discover the enormous benefits this course can bring. Better communication skills, boost your confidence.
+
+ID: cmnkafezw005k88vhr2ok4lkf
+Q: You hear a scientist talking about a slimming diet. What does she say about the diet?
+[*] It can have useful results
+[ ] It is dangerous
+[ ] It is very popular
+[ ] It has no effect
+Original Speech: Our research has shown that this diet can produce some positive results when followed correctly. Participants showed measurable weight loss.
+
+ID: cmnkaffh7005q88vhjas2kzgw
+Q: You hear a teenage girl talking about her hobby. What is she talking about?
+[ ] painting
+[*] a musical instrument
+[ ] cooking
+[ ] dancing
+Original Speech: I've been practising every day for two years. At first my fingers couldn't reach the right positions, but now I can play several songs.
+
+ID: cmnkaffyj005w88vh8anseiwu
+Q: You hear two people talking. How does the woman feel?
+[ ] worried
+[ ] angry
+[*] relieved
+[ ] disappointed
+Original Speech: Woman: I got the results back from the hospital. Everything is fine! Man: That must be such a relief! Woman: It really is. I can finally stop worrying.
+
+ID: cmnkafgfw006288vhlj0j2sey
+Q: You overhear a man talking about competitions. What did his favorite prize allow him to do?
+[ ] travel abroad
+[*] stay in a luxurious place
+[ ] buy a new car
+[ ] meet a celebrity
+Original Speech: We've won all sorts of things over the years. But my favourite was definitely the weekend at that five-star hotel. It was absolutely luxurious.
+
+ID: cmnkafgxf006888vhywkppaqq
+Q: You overhear a woman talking about some news. How does she feel about the news?
+[ ] worried
+[ ] confused
+[*] delighted
+[ ] disappointed
+Original Speech: I just heard that I got the promotion! I'm absolutely delighted! I've been working so hard for this and it's finally happened.
+
+ID: cmnkafhep006e88vh0yr9324g
+Q: You overhear two people talking in a restaurant. Where has the woman just come from?
+[*] a supermarket
+[ ] the office
+[ ] the gym
+[ ] the cinema
+Original Speech: Woman: Sorry I'm late! I popped into the supermarket on the way here. Man: No problem. I only just got here myself.
+
+ID: cmnkafhw2006k88vhcig3lusf
+Q: You overhear two people talking on a bus tour of a city. What do they agree about?
+[*] how busy the city is
+[ ] how beautiful the buildings are
+[ ] how expensive everything is
+[ ] how friendly people are
+Original Speech: Man: I had no idea this city would be so crowded! Woman: I know! The streets are absolutely packed. It really is incredibly busy.
+
+ID: cmnkafide006q88vho1kylr34
+Q: You turn on the radio and hear a man speaking. What are you listening to?
+[ ] a news report
+[ ] a weather forecast
+[*] an advertisement
+[ ] an interview
+Original Speech: Are you tired of ordinary holidays? Dream Destinations can offer you the trip of a lifetime! Book before the end of the month for fifty percent off!
+
+ID: cmnkafiup006w88vh94s9rho4
+Q: You turn on the radio and hear part of a music program. What do you learn about the four people mentioned?
+[ ] They are all very experienced
+[ ] They play different instruments
+[*] They have recently formed a group
+[ ] They are from different countries
+Original Speech: These four talented musicians only came together a few months ago, forming a brand new group. Their debut album has already caused quite a stir.
+
+ID: cmnw1lde70001883n0grrs7jb
+Q: In his songs, Steve writes about his:
+[ ] travels
+[*] children
+[ ] hometown
+[ ] childhood memories
+Original Speech: Steve: My songs are all about my kids, really. They inspire everything I write. Their little adventures, the funny things they say — it all goes into the music.
+
+ID: cmnw1lfh60007883n3f8oymcu
+Q: Steve enjoys recording with his band because:
+[*] it's like being in a family
+[ ] he doesn't have to sing
+[ ] everyone helps write the songs
+[ ] the studio is comfortable
+Original Speech: Steve: Recording with the band is the best part. We're like a family in there. Everyone supports each other, and the atmosphere is just wonderful.
+
+ID: cmnw1lhg6000d883nluvvmt2d
+Q: Two friends are talking. What's the man's new phone number?
+[ ] 07 2844 789
+[*] 07 2844 798
+[ ] 07 2848 798
+[ ] 07 2844 978
+Original Speech: Woman: I've lost your number. What is it again? Man: It's changed actually. My new number is zero seven, two eight four four, seven nine eight. Woman: Let me read that back — oh seven, two eight four four, seven nine eight? Man: That's right.
+
+ID: cmnw1ljk1000j883neflij1rs
+Q: What does the woman like about the clothes he designs?
+[ ] They are comfortable
+[ ] They are affordable
+[*] They are original
+[ ] They are colourful
+Original Speech: Woman: I love your designs! They're so unique. I've never seen anything like them before. They're completely original. Man: Thank you, that means a lot to me.
+
+ID: cmnw1lluk000p883nj3thbuej
+Q: What is the woman giving advice about?
+[*] Throwing things away
+[ ] Organising a party
+[ ] Saving money
+[ ] Cooking healthy meals
+Original Speech: Woman: The best thing you can do is go through all your stuff and just throw away anything you haven't used in a year. You'll feel so much better with less clutter around the house.
+
+ID: cmnw1lom4000v883na4m27dbq
+Q: What time is the party on Saturday?
+[ ] 1:30
+[ ] 2:00
+[*] 2:30
+[ ] 3:00
+Original Speech: Man: The party is this Saturday. It starts at half past two in the afternoon. Don't be late! We're meeting at Sarah's house. Woman: Great, see you at two thirty then!
+
+ID: cmnw1lqu90011883n0et9qbsj
+Q: Which day is Jimmy's guitar lesson?
+[*] Thursday
+[ ] Tuesday
+[ ] Wednesday
+[ ] Friday
+Original Speech: Mother: Jimmy has his guitar lesson every Thursday after school. His teacher Mr Hendricks comes to the house at four o'clock. Jimmy always looks forward to Thursdays.
+
+ID: cmnkafjfl007388vhmbqrq7sx
+Q: Who gave the man the CD for his birthday?
+[ ] His grandfather
+[*] His sister
+[ ] His mother
+Original Speech: Man: Thanks for the birthday presents everyone. I love this new CD! Woman: Which one? Man: The jazz one. My sister gave it to me.
+
+ID: cmnkafk41007888vhfjjah8to
+Q: Where is the girl's purse?
+[ ] On the chair
+[ ] On the bed
+[*] On the desk
+Original Speech: Girl: Mum, have you seen my purse? Oh wait, here it is on the desk, under my books!
+
+ID: cmnkafklg007d88vhttjq9e7p
+Q: Where will the couple meet?
+[ ] By the river
+[*] At the shop
+[ ] At home
+Original Speech: Man: So where shall we meet? Woman: How about at the shop on the corner? Man: Good idea. I'll meet you there at three.
+
+ID: cmnkafl2r007i88vhzf0lw8xe
+Q: Which kind of T-shirt did the boy choose?
+[*] Striped
+[ ] Plain
+[ ] Checked
+Original Speech: Boy: I like the striped one best. Mum: Are you sure? The plain one is nice too. Boy: No, I want the one with stripes.
+
+ID: cmnkaflk7007n88vheo4z1p56
+Q: Where is Angela now?
+[*] At the gym
+[ ] At school
+[ ] At the shops
+Original Speech: Angela called from the gym. She said she'd be there for another hour doing her workout.
+
+ID: cmnkafm1k007s88vh2o2s9wqy
+Q: What has the girl forgotten to bring?
+[ ] Her towel
+[ ] Her bag
+[*] Her swimming costume
+Original Speech: Girl: Oh no, I've forgotten my swimming costume again! I left it on my bed. Man: We can't go back for it now.
+
+ID: cmnkafmiv007x88vhq9ce6c55
+Q: How will the man book tickets for the show?
+[ ] At the box office
+[*] Online
+[ ] By phone
+Original Speech: Woman: How are you going to get the tickets? Man: I'll book them online. It's easier than queuing at the box office.
+
+ID: cmnkafn05008288vhctgrvb85
+Q: Which job does Max do in the program?
+[*] Cameraman
+[ ] Presenter
+[ ] Director
+Original Speech: Max is the cameraman on the show. He's responsible for all the filming. The director says Max has a great eye for detail.
+
+ID: cmnkafnhk008788vha527e6ei
+Q: How did the man travel?
+[ ] By car
+[*] By train
+[ ] By bus
+Original Speech: Man: The train journey was brilliant. I had a window seat and the scenery was amazing all the way.
+
+ID: cmnkafnz2008c88vh7cge129a
+Q: What job does Mary's brother do?
+[ ] Doctor
+[ ] Teacher
+[*] Nurse
+Original Speech: Mary: My brother works at the hospital. He's a nurse. He loves looking after people.
+
+ID: cmnkafogf008h88vhivikd246
+Q: What will Ben do this evening?
+[ ] Read a book
+[*] Paint a picture
+[ ] Play a musical instrument
+Original Speech: Ben: I'll finish that painting tonight and read my book at the weekend. Mum: Good idea, the painting looks nearly done.
+
+ID: cmnkafoxu008m88vhtspro1e3
+Q: How did the woman travel to Scotland?
+[ ] By car
+[ ] By bicycle
+[*] By plane
+Original Speech: Woman: The flight to Edinburgh was really smooth. We landed right on time. It only took about an hour from London.
+
+ID: cmnkafpf6008r88vh5tnb3yha
+Q: What was the weather like when the holiday began?
+[*] Sunny
+[ ] Rainy
+[ ] Cloudy
+Original Speech: We arrived at the resort on Monday and the sun was shining brightly. It was a beautiful start to our holiday.
+
+ID: cmnkafpwg008w88vhma1cjja8
+Q: Which day is Jimmy's guitar lesson?
+[ ] Monday
+[ ] Wednesday
+[*] Thursday
+Original Speech: Jimmy used to have his guitar lesson on Mondays, but now it's on Thursdays at four o'clock.
+
+ID: cmnkafqdr009188vh65vtatht
+Q: What type of T-shirt does the woman want?
+[*] A bright-coloured one
+[ ] A dark one
+[ ] A white one
+Original Speech: Woman: I'd like a T-shirt in a bright colour please. Something like red or orange. Assistant: How about this red one?
+
+ID: cmnkafqv1009688vhvnla4ob0
+Q: Where is the computer now?
+[*] In the living room
+[ ] In the bedroom
+[ ] In the office
+Original Speech: We moved the computer from the bedroom into the living room. It's much better having it there.
+
+ID: cmnkafrch009b88vhqqjwoq8t
+Q: Which is the aunt's postcard?
+[ ] The beach postcard
+[ ] The city postcard
+[*] The mountain postcard
+Original Speech: The postcard from Aunt Mary has a beautiful picture of mountains on it. She always sends postcards from the mountains when she goes hiking.
+
+ID: cmnkafrtu009g88vhylw3rxbc
+Q: Which sweater does the customer choose?
+[ ] The green one
+[*] The blue one
+[ ] The red one
+Original Speech: Customer: I'll take the blue one please. It matches my coat perfectly. The green one is nice but blue is my favourite colour.
+
+ID: cmnkafsb7009l88vhgm21zdqh
+Q: What is the woman going to eat?
+[ ] Salad
+[*] Pasta
+[ ] Soup
+Original Speech: Woman: I think I'll have the pasta. Man: Not the salad? Woman: No, I want something warm today. The pasta looks delicious.
+
+ID: cmnkafssk009q88vhv4crz79t
+Q: How will Nick get to the airport?
+[*] By bus
+[ ] By car
+[ ] By taxi
+Original Speech: Nick: I'll just catch the early bus. It goes directly to the airport terminal. A taxi is too expensive.
+
+ID: cmnkaft9v009v88vhwgrxxaxb
+Q: What is the man's job now?
+[ ] Teacher
+[*] Journalist
+[ ] Doctor
+Original Speech: Man: I used to be a teacher but I changed careers last year. I'm now working as a journalist for the local news.
+
+ID: cmnkaftr500a088vhjknobith
+Q: What was the girl given for her birthday?
+[*] A watch
+[ ] A book
+[ ] A necklace
+Original Speech: Girl: I got the most amazing thing for my birthday. A brand new watch! It's silver with a blue face.
+
+ID: cmnkafu8m00a588vhj4ae0bi3
+Q: What time does the film begin?
+[ ] 7:00
+[*] 7:15
+[ ] 7:30
+Original Speech: The main feature starts at quarter past seven. There are trailers before that, from seven o'clock.
+
+ID: cmnkafupz00aa88vhm8hfexf5
+Q: What's the weather like now?
+[ ] Sunny
+[ ] Snowy
+[*] Rainy
+Original Speech: It was sunny this morning but look at those dark clouds. And it's started raining now. We'd better take an umbrella.
+
+ID: cmnkafv7a00af88vhlen31t3b
+Q: Which man is the English teacher?
+[ ] The short man
+[ ] The man in a suit
+[*] The tall man with glasses
+Original Speech: The English teacher is the tall man with glasses and a beard. He's standing by the window talking to the students.
+
+ID: cmnkafvoo00ak88vhjdboy04v
+Q: What does the woman plan to do in the mountains?
+[ ] Skiing
+[*] Going sightseeing
+[ ] Climbing
+Original Speech: Woman: I'm going hiking in the mountains this weekend. I've been planning the route for weeks. I can't wait to go sightseeing.
+
+ID: cmnkafw9h00ap88vh8iqlpw9u
+Q: Where did Minnie and Richard first meet?
+[ ] At work
+[ ] At school
+[*] At a party
+Original Speech: Richard: We first met at a party. My friend's birthday party actually. Minnie was there with her cousin.
+
+ID: cmnkafwr400au88vhd54iudq9
+Q: Where is the new cafe?
+[*] Next to the library
+[ ] Near the station
+[ ] In the shopping centre
+Original Speech: The new cafe has opened next to the library. It's got great coffee and a lovely view of the park.
+
+ID: cmnkafx8e00az88vhmi7f78jy
+Q: What did John do when he last visited friends?
+[ ] Had dinner
+[ ] Played games
+[*] Went to the cinema
+Original Speech: John: Last time I visited my friends we went to the cinema together. We saw a great action film.
+
+ID: cmnw1lwpe001d883n53wypr3m
+Q: Which girl is Sarah?
+[ ] The short girl with blonde hair
+[ ] The girl with glasses reading a book
+[*] The tall girl with long dark hair in a striped top
+Original Speech: Man: Which one is Sarah? Woman: She's the tall girl with long dark hair, wearing the striped top. She's standing near the window.
+
+ID: cmnw1lykm001i883nxx9aafsa
+Q: How does the man go to work?
+[ ] By car
+[*] By bicycle
+[ ] By bus
+Original Speech: Woman: How do you get to work these days? Man: I used to drive but now I cycle. It's much better for me and the environment. Takes about twenty minutes.
+
+ID: cmnw1m1uk001n883n9b8zir1w
+Q: What color is Mary's coat?
+[ ] Blue
+[*] Red
+[ ] Green
+Original Speech: Man: Is that Mary over there? Woman: Which one? Man: The one in the red coat by the door. Woman: Yes, that's her.
+
+ID: cmnw1m3x7001s883nbetbensp
+Q: What is the man's favorite sport?
+[ ] Tennis
+[ ] Swimming
+[*] Football
+Original Speech: Woman: Do you play any sports? Man: I play tennis sometimes and I go swimming, but football is my real passion. I play every weekend with my friends.
+
+ID: cmnw1m6bc001x883ngk2a0qu0
+Q: What time does the film finish?
+[ ] 8:45
+[ ] 9:00
+[*] 9:15
+Original Speech: Man: The film starts at seven fifteen and it's about two hours long, so it should finish at around quarter past nine. Woman: OK, I'll pick you up at nine fifteen then.
+
+ID: cmnw1m8l90022883n16mlw4rq
+Q: What will Tim and his dad play today?
+[ ] Football
+[*] Chess
+[ ] Tennis
+Original Speech: Tim: Dad, can we play football today? Dad: Sorry Tim, the garden's too wet. How about a board game instead? We could play chess. Tim: OK, chess sounds fun!
+
+ID: cmnw1mb2c0027883nzlfvt4zt
+Q: What will they do today?
+[ ] Go to the beach
+[ ] Stay at home
+[*] Go to the cinema
+Original Speech: Woman: Shall we go to the beach today? Man: It looks like rain. Why don't we go to the cinema instead? Woman: Good idea. There's a new comedy on.
+
+ID: cmnw1mdci002c883n49z38hk2
+Q: When will the shop open again?
+[ ] Saturday
+[*] Monday
+[ ] Wednesday
+Original Speech: This is a recorded message. The shop is currently closed for refurbishment. We will reopen on Monday the fifteenth of March. We apologise for any inconvenience.
+
+ID: cmnw1mg19002h883nrxhr8pp9
+Q: Where will the man leave his car tonight?
+[ ] On the street
+[ ] In a car park
+[*] In the garage
+Original Speech: Woman: Where are you going to park? Man: I'll leave the car in the garage tonight. It's supposed to be very cold and I don't want ice on the windscreen.
+
+ID: cmnw1mjo3002m883npuwown4k
+Q: Which platform does the woman's train leave from?
+[ ] Platform 1
+[ ] Platform 2
+[*] Platform 3
+Original Speech: Woman: Excuse me, which platform for the London train? Man: That's platform three. It leaves in about ten minutes. Woman: Thank you!
+
+ID: cmnw1mmtw002r883nw1v664uh
+Q: What size does the woman buy?
+[ ] Small
+[ ] Medium
+[*] Large
+Original Speech: Woman: Have you got this dress in a medium? Assistant: I'm sorry, we've only got small and large left. Woman: I'll try the large then. It might be OK.
+
+ID: cmnw1mpr6002w883no9h24dv8
+Q: What time does the concert start?
+[ ] 7:00
+[*] 7:30
+[ ] 8:00
+Original Speech: Man: What time does the concert start? Woman: The doors open at seven but the band doesn't come on stage until half past seven. Man: So seven thirty — let's get there early.
+
+ID: cmnw1mrq20031883nkjs3c7wi
+Q: Where is Marianna talking to Jack?
+[ ] In a library
+[*] In a restaurant or café
+[ ] In a park
+Original Speech: Jack: It's so noisy in here with all these people eating and the clatter of dishes. Marianna: I know. Let's finish our coffee and find somewhere quieter.
+
+ID: cmnw1mu0r0036883nnq0hy1yw
+Q: What happened to the girl this afternoon?
+[ ] She lost her bag
+[ ] She missed the bus
+[*] She fell off her bicycle
+Original Speech: Girl: You won't believe what happened! I was riding my bicycle to the shops and I went over a big stone. I fell off and hurt my knee. Mum had to come and pick me up.
+
+ID: cmnw1mxc9003b883nclofoai5
+Q: Which yoga position has the man found beneficial?
+[ ] The warrior pose
+[ ] The downward dog
+[*] The tree pose
+Original Speech: Man: I've tried lots of different yoga positions but the one that helps my back the most is the tree pose. You stand on one leg with your arms above your head. It's really improved my balance too.
+
+ID: cmnw1n06n003g883n51jcyfk5
+Q: Where will they sit?
+[ ] Inside near the window
+[*] In the garden
+[ ] At the bar
+Original Speech: Man: Shall we sit inside or outside? Woman: It's such a lovely day, let's sit in the garden. Man: Good idea, there's a free table by the fountain.
+
+ID: cmnw1n36r003l883n8ipdz7et
+Q: Where is the new café?
+[*] Next to the bookshop
+[ ] Opposite the bank
+[ ] Behind the cinema
+Original Speech: Woman: Have you seen the new café? It's right next to the bookshop on the main street. Man: Oh yes, I walked past it yesterday. It looks really nice.
+
