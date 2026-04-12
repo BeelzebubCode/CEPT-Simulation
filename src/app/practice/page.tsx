@@ -115,14 +115,35 @@ export default function PracticePage() {
   useEffect(() => { localStorage.setItem('cept_practice_qIdx', String(qIdx)); }, [qIdx]);
 
   const sec = sections[secIdx];
-  const question = sec?.questions[qIdx];
-  const totalQ = sec?.questions.length || 0;
+  const isComprehension = sec?.type === 'READING_COMPREHENSION';
 
-  const selectAnswer = useCallback((choiceId: string) => {
-    if (!question) return;
-    // Prevent changing answer if already answered in practice mode
-    if (answers[question.id]) return;
-    setAnswers(prev => ({ ...prev, [question.id]: choiceId }));
+  // Group questions by passage for Reading Comprehension
+  const passageGroups = (() => {
+    if (!sec || !isComprehension) return null;
+    const groups: { passage: string; questions: Question[] }[] = [];
+    const seen = new Map<string, number>();
+    for (const q of sec.questions) {
+      const p = q.passage || '';
+      if (seen.has(p)) {
+        groups[seen.get(p)!].questions.push(q);
+      } else {
+        seen.set(p, groups.length);
+        groups.push({ passage: p, questions: [q] });
+      }
+    }
+    return groups;
+  })();
+
+  // For comprehension: qIdx indexes passage groups; for others: indexes questions
+  const totalQ = isComprehension && passageGroups ? passageGroups.length : (sec?.questions.length || 0);
+  const question = isComprehension ? null : sec?.questions[qIdx];
+  const currentGroup = isComprehension && passageGroups ? passageGroups[qIdx] : null;
+
+  const selectAnswer = useCallback((choiceId: string, questionId?: string) => {
+    const qId = questionId || question?.id;
+    if (!qId) return;
+    if (answers[qId]) return;
+    setAnswers(prev => ({ ...prev, [qId]: choiceId }));
   }, [question, answers]);
 
   const nextQ = () => { if (qIdx < totalQ - 1) setQIdx(qIdx + 1); };
@@ -152,12 +173,16 @@ export default function PracticePage() {
   };
 
   if (loading) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', fontSize: 18, color: '#666' }}>Loading practice mode...</div>;
-  if (!sec || !question) return <div style={{ padding: 40, textAlign: 'center' }}>No practice data found.</div>;
+  if (!sec || (!question && !currentGroup)) return <div style={{ padding: 40, textAlign: 'center' }}>No practice data found.</div>;
 
   const isListening = sec.type === 'LISTENING_TEXT' || sec.type === 'LISTENING_IMAGE';
   const isFillBlank = sec.type === 'READING_FILL_BLANK';
-  const answeredCount = sec.questions.filter(q => answers[q.id]).length;
-  const isQuestionAnswered = !!answers[question.id];
+  const answeredCount = isComprehension && passageGroups
+    ? passageGroups.filter(g => g.questions.every(q => answers[q.id])).length
+    : sec.questions.filter(q => answers[q.id]).length;
+  const isQuestionAnswered = isComprehension && currentGroup
+    ? currentGroup.questions.every(q => answers[q.id])
+    : question ? !!answers[question.id] : false;
 
   return (
     <>
@@ -257,178 +282,295 @@ export default function PracticePage() {
         <h1 className="section-title">{sec.name}</h1>
         <p className="section-desc">{sec.description}</p>
         <div className="question-dots">
-          {sec.questions.map((q, i) => {
-            const isAns = !!answers[q.id];
-            const isCur = i === qIdx;
-            let bgColor = 'var(--card)';
-            let borderColor = 'var(--border)';
-            let color = 'var(--text-secondary)';
-            
-            if (isCur) {
-              bgColor = 'var(--accent)'; borderColor = 'var(--accent)'; color = '#fff';
-            } else if (isAns) {
-              const correctChoiceId = q.choices.find(c => c.isCorrect)?.id;
-              const isCorrect = answers[q.id] === correctChoiceId;
-              if (isCorrect) {
-                  bgColor = 'var(--correct-bg)'; borderColor = 'var(--correct)'; color = 'var(--correct)';
-              } else {
-                  bgColor = 'var(--wrong-bg)'; borderColor = 'var(--wrong)'; color = 'var(--wrong)';
-              }
-            }
+          {isComprehension && passageGroups ? (
+            /* Passage group dots for Reading Comprehension */
+            passageGroups.map((g, i) => {
+              const allAnswered = g.questions.every(q => answers[q.id]);
+              const anyAnswered = g.questions.some(q => answers[q.id]);
+              const isCur = i === qIdx;
+              let bgColor = 'var(--card)';
+              let borderColor = 'var(--border)';
+              let color = 'var(--text-secondary)';
 
-            return (
-              <div key={q.id} style={{ background: bgColor, borderColor, color }} className={`q-dot`}
-                   onClick={() => { setQIdx(i); setShowSectionSelector(false); }}>{i + 1}</div>
-            );
-          })}
+              if (isCur) {
+                bgColor = 'var(--accent)'; borderColor = 'var(--accent)'; color = '#fff';
+              } else if (allAnswered) {
+                const allCorrect = g.questions.every(q => {
+                  const correct = q.choices.find(c => c.isCorrect);
+                  return correct && answers[q.id] === correct.id;
+                });
+                if (allCorrect) {
+                  bgColor = 'var(--correct-bg)'; borderColor = 'var(--correct)'; color = 'var(--correct)';
+                } else {
+                  bgColor = 'var(--wrong-bg)'; borderColor = 'var(--wrong)'; color = 'var(--wrong)';
+                }
+              } else if (anyAnswered) {
+                bgColor = '#fff3e0'; borderColor = '#ff9800'; color = '#e65100';
+              }
+
+              return (
+                <div key={i} style={{ background: bgColor, borderColor, color }} className="q-dot"
+                     onClick={() => { setQIdx(i); setShowSectionSelector(false); }}>{i + 1}</div>
+              );
+            })
+          ) : (
+            /* Standard per-question dots */
+            sec.questions.map((q, i) => {
+              const isAns = !!answers[q.id];
+              const isCur = i === qIdx;
+              let bgColor = 'var(--card)';
+              let borderColor = 'var(--border)';
+              let color = 'var(--text-secondary)';
+
+              if (isCur) {
+                bgColor = 'var(--accent)'; borderColor = 'var(--accent)'; color = '#fff';
+              } else if (isAns) {
+                const correctChoiceId = q.choices.find(c => c.isCorrect)?.id;
+                const isCorrect = answers[q.id] === correctChoiceId;
+                if (isCorrect) {
+                    bgColor = 'var(--correct-bg)'; borderColor = 'var(--correct)'; color = 'var(--correct)';
+                } else {
+                    bgColor = 'var(--wrong-bg)'; borderColor = 'var(--wrong)'; color = 'var(--wrong)';
+                }
+              }
+
+              return (
+                <div key={q.id} style={{ background: bgColor, borderColor, color }} className={`q-dot`}
+                     onClick={() => { setQIdx(i); setShowSectionSelector(false); }}>{i + 1}</div>
+              );
+            })
+          )}
         </div>
       </div>
 
       <main className="main-content" onClick={() => setShowSectionSelector(false)}>
-        <div className="question-card" key={question.id}>
-          {!isFillBlank && <div className="question-number">{qIdx + 1}</div>}
+        {isComprehension && currentGroup ? (
+          /* ─── READING COMPREHENSION: GROUPED PASSAGE VIEW ─── */
+          <div className="question-card" key={`passage-${qIdx}`}>
+            <div className="question-number">Passage {qIdx + 1}</div>
 
-          {isFillBlank ? (
-            /* ─── FILL-IN-THE-BLANK DROPDOWN PASSAGE ─── */
-            <>
-              <FillBlankPassage
-                question={question}
-                blankAnswers={blankAnswers[question.id] || {}}
-                submitted={!!blankSubmitted[question.id]}
-                onBlankChange={(blankNum, choiceId) => {
-                  if (blankSubmitted[question.id]) return;
-                  setBlankAnswers(prev => ({
-                    ...prev,
-                    [question.id]: { ...(prev[question.id] || {}), [blankNum]: choiceId }
-                  }));
-                }}
-              />
-              {!blankSubmitted[question.id] ? (
-                <button
-                  className="btn btn-primary"
-                  style={{ marginTop: 20, width: '100%', padding: '14px 0', fontSize: 16 }}
-                  disabled={(() => {
-                    const blankNums = [...new Set(question.choices.map(c => c.blankNumber || 1))];
-                    const answered = blankAnswers[question.id] || {};
-                    return blankNums.some(bn => !answered[bn]);
-                  })()}
-                  onClick={() => {
-                    setBlankSubmitted(prev => ({ ...prev, [question.id]: true }));
-                    setAnswers(prev => ({ ...prev, [question.id]: 'submitted' }));
-                  }}
-                >Check Answers</button>
-              ) : (
-                <div style={{ marginTop: 20, padding: 16, borderRadius: 8, background: '#e3f2fd', color: '#0277bd' }}>
-                  {(() => {
-                    const blankNums = [...new Set(question.choices.map(c => c.blankNumber || 1))];
-                    const answered = blankAnswers[question.id] || {};
-                    let correct = 0;
-                    for (const bn of blankNums) {
-                      const selectedId = answered[bn];
-                      const choice = question.choices.find(c => c.id === selectedId);
-                      if (choice?.isCorrect) correct++;
-                    }
-                    return (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        {correct === blankNums.length ? <CheckCircle size={20} color="#2e7d32" /> : <XCircle size={20} color="#c62828" />}
-                        <span>Score: {correct}/{blankNums.length} blanks correct</span>
-                      </div>
-                    );
-                  })()}
-                </div>
-              )}
-            </>
-          ) : (
-            /* ─── STANDARD QUESTION ─── */
-            <>
-              {question.passage && (
-                <div className="question-passage">{question.passage}</div>
-              )}
+            {/* Passage text */}
+            <div className="question-passage" style={{ fontSize: 15, lineHeight: 1.8, whiteSpace: 'pre-line', marginBottom: 24 }}>
+              {currentGroup.passage}
+            </div>
 
-              {question.imageUrl ? (
-                <img src={question.imageUrl} alt="Question" className="question-image" />
-              ) : (sec.type === 'LISTENING_IMAGE' || sec.type === 'READING_SIGNS') ? (
-                <div className="image-placeholder"><Image size={20} /> ยังไม่มีรูป — Admin สามารถอัปโหลดได้</div>
-              ) : null}
+            {/* All questions for this passage */}
+            {currentGroup.questions.map((q, qi) => {
+              const isQAnswered = !!answers[q.id];
+              return (
+                <div key={q.id} style={{
+                  padding: '20px 0',
+                  borderTop: qi > 0 ? '1px solid #e0e0e0' : 'none',
+                }}>
+                  <div className="question-text" style={{ fontSize: 16, fontWeight: 600, marginBottom: 12, display: 'flex', gap: 8 }}>
+                    <span style={{ color: 'var(--accent)', fontWeight: 700, flexShrink: 0 }}>{qi + 1}.</span>
+                    <span>{q.text}</span>
+                  </div>
 
-              {isListening && question.speechText && (
-                <div style={{ background: '#f5f5f5', padding: '16px 20px', borderRadius: 8, marginBottom: 20 }}>
-                  <button className={`tts-btn${speaking ? ' speaking' : ''}`} style={{ marginBottom: isQuestionAnswered ? 16 : 0 }}
-                    onClick={() => speaking ? stopSpeaking() : speak(question.speechText!)}>
-                    {speaking ? <><VolumeX size={16} /> Stop</> : <><Volume2 size={16} /> Listen to Audio</>}
-                  </button>
-                  {isQuestionAnswered && (
-                    <div style={{ borderTop: '1px solid #ddd', paddingTop: 16, marginTop: 16, color: '#444' }}>
-                      <strong>Transcript:</strong>
-                      <p style={{ marginTop: 8, fontStyle: 'italic', lineHeight: 1.6 }}>"{question.speechText}"</p>
+                  <div className="choices" style={{ gap: 8 }}>
+                    {q.choices.map(c => {
+                      const isSelected = answers[q.id] === c.id;
+                      let choiceClass = 'choice-btn';
+                      let badge = null;
+
+                      if (isQAnswered) {
+                        if (c.isCorrect) {
+                          choiceClass += ' review-correct';
+                          badge = <span className="review-badge correct-badge">CORRECT</span>;
+                        } else if (isSelected && !c.isCorrect) {
+                          choiceClass += ' review-wrong';
+                          badge = <span className="review-badge wrong-badge">YOUR ANSWER</span>;
+                        } else {
+                          choiceClass += ' review-disabled';
+                        }
+                      } else if (isSelected) {
+                        choiceClass += ' selected';
+                      }
+
+                      return (
+                        <button key={c.id} className={choiceClass}
+                          onClick={() => selectAnswer(c.id, q.id)}
+                          style={isQAnswered ? { cursor: 'default', opacity: (!c.isCorrect && !isSelected) ? 0.6 : 1 } : {}}>
+                          <span className="choice-letter">{c.label}</span>
+                          <span>{c.text}</span>
+                          {badge}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {isQAnswered && (
+                    <div style={{ marginTop: 12, padding: 12, background: '#e3f2fd', borderRadius: 8, color: '#0277bd', display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>
+                      {answers[q.id] === q.choices.find(c => c.isCorrect)?.id ? (
+                        <><CheckCircle size={18} color="#2e7d32" /><span>Correct!</span></>
+                      ) : (
+                        <><XCircle size={18} color="#c62828" /><span>Incorrect. Review the correct answer above.</span></>
+                      )}
                     </div>
                   )}
                 </div>
-              )}
+              );
+            })}
 
-              <div className="question-text">{question.text}</div>
-
-              <div className={`choices${sec.type === 'LISTENING_IMAGE' ? ' choices-image' : ''}`}>
-                {question.choices.map(c => {
-                  const isSelected = answers[question.id] === c.id;
-                  let choiceClass = 'choice-btn';
-                  let badge = null;
-
-                  if (isQuestionAnswered) {
-                    if (c.isCorrect) {
-                      choiceClass += ' review-correct';
-                      badge = <span className="review-badge correct-badge">CORRECT</span>;
-                    } else if (isSelected && !c.isCorrect) {
-                      choiceClass += ' review-wrong';
-                      badge = <span className="review-badge wrong-badge">YOUR ANSWER</span>;
-                    } else {
-                      choiceClass += ' review-disabled';
-                    }
-                  } else if (isSelected) {
-                    choiceClass += ' selected';
-                  }
-
-                  return (
-                    <button key={c.id} className={choiceClass}
-                      onClick={() => selectAnswer(c.id)}
-                      style={isQuestionAnswered ? { cursor: 'default', opacity: (!c.isCorrect && !isSelected) ? 0.6 : 1 } : {}}>
-                      <span className="choice-letter">{c.label}</span>
-                      {sec.type === 'LISTENING_IMAGE' ? (
-                        c.imageUrl
-                          ? <img src={c.imageUrl} alt={`Option ${c.label}`} className="choice-image" />
-                          : <div className="choice-image-placeholder"><Image size={16} /><span>ยังไม่มีรูป</span></div>
-                      ) : (
-                        <span>{c.text}</span>
-                      )}
-                      {badge}
-                    </button>
-                  );
-                })}
+            {/* Overall passage score when all questions answered */}
+            {isQuestionAnswered && (
+              <div style={{ marginTop: 16, padding: 16, background: '#e8f5e9', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 12 }}>
+                <CheckCircle size={22} color="#2e7d32" />
+                <span style={{ fontWeight: 600, color: '#1b5e20' }}>
+                  Passage complete: {currentGroup.questions.filter(q => answers[q.id] === q.choices.find(c => c.isCorrect)?.id).length} / {currentGroup.questions.length} correct
+                </span>
               </div>
+            )}
+          </div>
+        ) : question ? (
+          /* ─── STANDARD SINGLE QUESTION VIEW ─── */
+          <div className="question-card" key={question.id}>
+            {!isFillBlank && <div className="question-number">{qIdx + 1}</div>}
 
-              {isQuestionAnswered && (
-                <div style={{ marginTop: 24, padding: 16, background: '#e3f2fd', borderRadius: 8, color: '#0277bd', display: 'flex', alignItems: 'center', gap: 10 }}>
-                  {answers[question.id] === question.choices.find(c => c.isCorrect)?.id ? (
-                    <CheckCircle size={20} color="#2e7d32" />
-                  ) : (
-                    <XCircle size={20} color="#c62828" />
-                  )}
-                  <span>
-                    {answers[question.id] === question.choices.find(c => c.isCorrect)?.id
-                      ? 'Great job! That is correct.'
-                      : 'Incorrect. Carefully review the correct answer.'}
-                  </span>
+            {isFillBlank ? (
+              /* ─── FILL-IN-THE-BLANK DROPDOWN PASSAGE ─── */
+              <>
+                <FillBlankPassage
+                  question={question}
+                  blankAnswers={blankAnswers[question.id] || {}}
+                  submitted={!!blankSubmitted[question.id]}
+                  onBlankChange={(blankNum, choiceId) => {
+                    if (blankSubmitted[question.id]) return;
+                    setBlankAnswers(prev => ({
+                      ...prev,
+                      [question.id]: { ...(prev[question.id] || {}), [blankNum]: choiceId }
+                    }));
+                  }}
+                />
+                {!blankSubmitted[question.id] ? (
+                  <button
+                    className="btn btn-primary"
+                    style={{ marginTop: 20, width: '100%', padding: '14px 0', fontSize: 16 }}
+                    disabled={(() => {
+                      const blankNums = [...new Set(question.choices.map(c => c.blankNumber || 1))];
+                      const answered = blankAnswers[question.id] || {};
+                      return blankNums.some(bn => !answered[bn]);
+                    })()}
+                    onClick={() => {
+                      setBlankSubmitted(prev => ({ ...prev, [question.id]: true }));
+                      setAnswers(prev => ({ ...prev, [question.id]: 'submitted' }));
+                    }}
+                  >Check Answers</button>
+                ) : (
+                  <div style={{ marginTop: 20, padding: 16, borderRadius: 8, background: '#e3f2fd', color: '#0277bd' }}>
+                    {(() => {
+                      const blankNums = [...new Set(question.choices.map(c => c.blankNumber || 1))];
+                      const answered = blankAnswers[question.id] || {};
+                      let correct = 0;
+                      for (const bn of blankNums) {
+                        const selectedId = answered[bn];
+                        const choice = question.choices.find(c => c.id === selectedId);
+                        if (choice?.isCorrect) correct++;
+                      }
+                      return (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          {correct === blankNums.length ? <CheckCircle size={20} color="#2e7d32" /> : <XCircle size={20} color="#c62828" />}
+                          <span>Score: {correct}/{blankNums.length} blanks correct</span>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                )}
+              </>
+            ) : (
+              /* ─── STANDARD QUESTION ─── */
+              <>
+                {question.passage && (
+                  <div className="question-passage">{question.passage}</div>
+                )}
+
+                {question.imageUrl ? (
+                  <img src={question.imageUrl} alt="Question" className="question-image" />
+                ) : (sec.type === 'LISTENING_IMAGE' || sec.type === 'READING_SIGNS') ? (
+                  <div className="image-placeholder"><Image size={20} /> ยังไม่มีรูป — Admin สามารถอัปโหลดได้</div>
+                ) : null}
+
+                {isListening && question.speechText && (
+                  <div style={{ background: '#f5f5f5', padding: '16px 20px', borderRadius: 8, marginBottom: 20 }}>
+                    <button className={`tts-btn${speaking ? ' speaking' : ''}`} style={{ marginBottom: isQuestionAnswered ? 16 : 0 }}
+                      onClick={() => speaking ? stopSpeaking() : speak(question.speechText!)}>
+                      {speaking ? <><VolumeX size={16} /> Stop</> : <><Volume2 size={16} /> Listen to Audio</>}
+                    </button>
+                    {isQuestionAnswered && (
+                      <div style={{ borderTop: '1px solid #ddd', paddingTop: 16, marginTop: 16, color: '#444' }}>
+                        <strong>Transcript:</strong>
+                        <p style={{ marginTop: 8, fontStyle: 'italic', lineHeight: 1.6 }}>"{question.speechText}"</p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div className="question-text">{question.text}</div>
+
+                <div className={`choices${sec.type === 'LISTENING_IMAGE' ? ' choices-image' : ''}`}>
+                  {question.choices.map(c => {
+                    const isSelected = answers[question.id] === c.id;
+                    let choiceClass = 'choice-btn';
+                    let badge = null;
+
+                    if (isQuestionAnswered) {
+                      if (c.isCorrect) {
+                        choiceClass += ' review-correct';
+                        badge = <span className="review-badge correct-badge">CORRECT</span>;
+                      } else if (isSelected && !c.isCorrect) {
+                        choiceClass += ' review-wrong';
+                        badge = <span className="review-badge wrong-badge">YOUR ANSWER</span>;
+                      } else {
+                        choiceClass += ' review-disabled';
+                      }
+                    } else if (isSelected) {
+                      choiceClass += ' selected';
+                    }
+
+                    return (
+                      <button key={c.id} className={choiceClass}
+                        onClick={() => selectAnswer(c.id)}
+                        style={isQuestionAnswered ? { cursor: 'default', opacity: (!c.isCorrect && !isSelected) ? 0.6 : 1 } : {}}>
+                        <span className="choice-letter">{c.label}</span>
+                        {sec.type === 'LISTENING_IMAGE' ? (
+                          c.imageUrl
+                            ? <img src={c.imageUrl} alt={`Option ${c.label}`} className="choice-image" />
+                            : <div className="choice-image-placeholder"><Image size={16} /><span>ยังไม่มีรูป</span></div>
+                        ) : (
+                          <span>{c.text}</span>
+                        )}
+                        {badge}
+                      </button>
+                    );
+                  })}
                 </div>
-              )}
-            </>
-          )}
-        </div>
+
+                {isQuestionAnswered && (
+                  <div style={{ marginTop: 24, padding: 16, background: '#e3f2fd', borderRadius: 8, color: '#0277bd', display: 'flex', alignItems: 'center', gap: 10 }}>
+                    {answers[question.id] === question.choices.find(c => c.isCorrect)?.id ? (
+                      <CheckCircle size={20} color="#2e7d32" />
+                    ) : (
+                      <XCircle size={20} color="#c62828" />
+                    )}
+                    <span>
+                      {answers[question.id] === question.choices.find(c => c.isCorrect)?.id
+                        ? 'Great job! That is correct.'
+                        : 'Incorrect. Carefully review the correct answer.'}
+                    </span>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        ) : null}
       </main>
 
       <nav className="nav-bar">
         <div className="nav-inner">
           <button className="btn btn-secondary" disabled={qIdx === 0} onClick={prevQ}><ChevronLeft size={16} /> Back</button>
-          <span className="nav-center">Q {qIdx + 1} / {totalQ} ({answeredCount} answered)</span>
+          <span className="nav-center">
+            {isComprehension ? `Passage ${qIdx + 1} / ${totalQ}` : `Q ${qIdx + 1} / ${totalQ}`} ({answeredCount} answered)
+          </span>
           <button className="btn btn-primary" disabled={qIdx === totalQ - 1} onClick={nextQ}>Next <ChevronRight size={16} /></button>
         </div>
       </nav>
