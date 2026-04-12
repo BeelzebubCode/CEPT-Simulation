@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Volume2, VolumeX, Image, ChevronLeft, ChevronRight, CheckCircle, XCircle, Sparkles } from 'lucide-react';
+import { Volume2, VolumeX, Image, ChevronLeft, ChevronRight, CheckCircle, XCircle, Sparkles, Loader2 } from 'lucide-react';
 
 interface Choice { id: string; label: string; text: string; imageUrl?: string; isCorrect: boolean; order: number; blankNumber?: number; }
 interface Question { id: string; text: string; passage?: string; speechText?: string; imageUrl?: string; order: number; choices: Choice[]; }
@@ -172,7 +172,16 @@ export default function PracticePage() {
     setShowSectionSelector(false);
   };
 
-  if (loading) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', fontSize: 18, color: '#666' }}>Loading practice mode...</div>;
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: 'linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)', color: '#4f46e5' }}>
+        <Loader2 className="spinning-loader" size={48} style={{ animation: 'spin 1s linear infinite', marginBottom: 16 }} />
+        <h2 style={{ fontSize: 24, fontWeight: 600, margin: 0 }}>Preparing Practice Mode</h2>
+        <p style={{ color: '#6b7280', marginTop: 8 }}>Fetching syllabus and exam assets...</p>
+        <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
   if (!sec || (!question && !currentGroup)) return <div style={{ padding: 40, textAlign: 'center' }}>No practice data found.</div>;
 
   const isListening = sec.type === 'LISTENING_TEXT' || sec.type === 'LISTENING_IMAGE';

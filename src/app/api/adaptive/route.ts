@@ -92,8 +92,6 @@ export async function POST(req: Request) {
         if (nextQ) {
           const section = await prisma.section.findUnique({ where: { id: currentSectionId } });
           return NextResponse.json({
-            isCorrect: firstCorrect,
-            theta: newTheta,
             nextQuestion: safeQuestion(nextQ),
             currentSectionId,
             currentSectionName: section?.name,
@@ -114,8 +112,6 @@ export async function POST(req: Request) {
         const firstInNext = await pickQuestion(nextSection.id, answeredIds, 'MEDIUM');
         if (firstInNext) {
           return NextResponse.json({
-            isCorrect: firstCorrect,
-            theta: newTheta,
             nextQuestion: safeQuestion(firstInNext),
             currentSectionId: nextSection.id,
             currentSectionName: nextSection.name,
@@ -126,7 +122,7 @@ export async function POST(req: Request) {
       }
 
       // No more sections → exam done
-      return NextResponse.json({ isCorrect: firstCorrect, theta: newTheta, nextQuestion: null });
+      return NextResponse.json({ nextQuestion: null });
     }
 
     // ─── FINISH ───────────────────────────────────────────────────────────────
