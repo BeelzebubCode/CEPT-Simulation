@@ -8,7 +8,7 @@ function safeQuestion(q: { choices: { id: string; label: string; text: string; i
   return { ...q, choices: safeChoices };
 }
 
-// Single DB round-trip: fetch up to 10 candidates, prefer difficulty at app level
+// Single DB round-trip: fetch candidates and prefer difficulty at app level
 async function pickQuestion(sectionId: string, excludeIds: string[], preferDifficulty: string) {
   const candidates = await prisma.question.findMany({
     where: { sectionId, id: { notIn: excludeIds } },
@@ -64,7 +64,7 @@ export async function POST(req: Request) {
 
       const blankChoiceIds: string[] = Array.isArray(body.blankChoiceIds) ? body.blankChoiceIds : [choiceId];
 
-      // Batch 1 — parallel: choices + section info (no sequential dependency)
+      // Batch 1 — parallel: fetch choices + section info
       const [choices, currentSection] = await Promise.all([
         prisma.choice.findMany({ where: { id: { in: blankChoiceIds } } }),
         prisma.section.findUnique({ where: { id: currentSectionId } }),
@@ -83,44 +83,69 @@ export async function POST(req: Request) {
         isCorrect: choiceMap.get(cid)?.isCorrect ?? false,
       }));
 
-      // Same section path
+      // Save answers exactly once — reuse the same Promise in both branches
+      const savePromise = prisma.answer.createMany({ data: answerData });
+
       if (sectionQCount < MAX_PER_SECTION) {
-        // Batch 2 — parallel: save answer + pick next question
+        // Batch 2 — parallel: save + pick next in same section
         const [, nextQ] = await Promise.all([
-          prisma.answer.createMany({ data: answerData }),
+          savePromise,
           pickQuestion(currentSectionId, answeredIds, difficulty),
         ]);
 
         if (nextQ) {
           return NextResponse.json({
             nextQuestion: safeQuestion(nextQ),
+            theta: newTheta,         // ← always return updated theta
             currentSectionId,
             currentSectionName: currentSection?.name,
             currentSectionType: currentSection?.type,
             sectionChanged: false,
           });
         }
-      }
 
-      // Section change — Batch 2: save answers + find next section in parallel
-      const [, nextSection] = await Promise.all([
-        prisma.answer.createMany({ data: answerData }),
-        prisma.section.findFirst({
+        // No more questions in this section — find next section
+        // savePromise already resolved above, this await is instant
+        const nextSection = await prisma.section.findFirst({
           where: { order: { gt: currentSection?.order ?? 0 } },
           orderBy: { order: 'asc' },
-        }),
-      ]);
+        });
 
-      if (nextSection) {
-        const firstInNext = await pickQuestion(nextSection.id, answeredIds, 'MEDIUM');
-        if (firstInNext) {
-          return NextResponse.json({
-            nextQuestion: safeQuestion(firstInNext),
-            currentSectionId: nextSection.id,
-            currentSectionName: nextSection.name,
-            currentSectionType: nextSection.type,
-            sectionChanged: true,
-          });
+        if (nextSection) {
+          const firstInNext = await pickQuestion(nextSection.id, answeredIds, 'MEDIUM');
+          if (firstInNext) {
+            return NextResponse.json({
+              nextQuestion: safeQuestion(firstInNext),
+              theta: newTheta,
+              currentSectionId: nextSection.id,
+              currentSectionName: nextSection.name,
+              currentSectionType: nextSection.type,
+              sectionChanged: true,
+            });
+          }
+        }
+      } else {
+        // Section limit reached — parallel: save + find next section
+        const [, nextSection] = await Promise.all([
+          savePromise,
+          prisma.section.findFirst({
+            where: { order: { gt: currentSection?.order ?? 0 } },
+            orderBy: { order: 'asc' },
+          }),
+        ]);
+
+        if (nextSection) {
+          const firstInNext = await pickQuestion(nextSection.id, answeredIds, 'MEDIUM');
+          if (firstInNext) {
+            return NextResponse.json({
+              nextQuestion: safeQuestion(firstInNext),
+              theta: newTheta,
+              currentSectionId: nextSection.id,
+              currentSectionName: nextSection.name,
+              currentSectionType: nextSection.type,
+              sectionChanged: true,
+            });
+          }
         }
       }
 
@@ -145,6 +170,7 @@ export async function POST(req: Request) {
         if (qAnswers.length === 1) {
           totalScore += qAnswers[0].isCorrect ? 1 : 0;
         } else {
+          // Fill-blank partial credit: correct_blanks / total_blanks
           totalScore += qAnswers.filter(a => a.isCorrect).length / qAnswers.length;
         }
       }

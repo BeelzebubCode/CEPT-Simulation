@@ -26,7 +26,10 @@ function parseSectionBody(body: unknown): {
   };
 }
 
-export async function GET() {
+export async function GET(req: Request) {
+  if (!(await isAdminRequest(req))) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   const sections = await prisma.section.findMany({
     orderBy: { order: 'asc' },
     include: { _count: { select: { questions: true } } },

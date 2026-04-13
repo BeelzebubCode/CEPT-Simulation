@@ -19,7 +19,8 @@ const securityHeaders = [
     key: 'Content-Security-Policy',
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval'", // Next.js needs both for dev+prod
+      // unsafe-eval needed only in dev (HMR/fast-refresh); strip it in production
+      `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV !== 'production' ? " 'unsafe-eval'" : ''}`,
       "style-src 'self' 'unsafe-inline'",                // inline styles used throughout
       "img-src 'self' data: blob: https://*.public.blob.vercel-storage.com", // Vercel Blob, data URIs, blob preview
       "font-src 'self'",

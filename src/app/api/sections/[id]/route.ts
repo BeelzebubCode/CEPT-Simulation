@@ -27,7 +27,10 @@ function parseUpdateBody(body: unknown): {
   return out as { name?: string; description?: string; timeLimit?: number; order?: number };
 }
 
-export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  if (!(await isAdminRequest(req))) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   const { id } = await params;
   const section = await prisma.section.findUnique({
     where: { id },
