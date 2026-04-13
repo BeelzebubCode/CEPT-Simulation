@@ -158,14 +158,25 @@ export default function AdaptiveExamPage() {
   const finishExam = async () => {
     if (timerRef.current) clearInterval(timerRef.current);
     setLoading(true);
-    const res = await fetch('/api/adaptive', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'finish', attemptId, theta })
-    });
-    const result = await res.json();
-    localStorage.setItem('cept_adaptive_result', JSON.stringify(result));
-    router.push('/results');
+    try {
+      const res = await fetch('/api/adaptive', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'finish', attemptId, theta })
+      });
+      const result = await res.json();
+      if (!res.ok || result.error) {
+        alert(result.error || 'Failed to submit exam. Please try again.');
+        setLoading(false);
+        return;
+      }
+      localStorage.setItem('cept_adaptive_result', JSON.stringify(result));
+      router.push('/results');
+    } catch (err) {
+      console.error('Failed to finish exam:', err);
+      alert('Network error. Please check your connection and try again.');
+      setLoading(false);
+    }
   };
 
   const formatTime = (s: number) => {

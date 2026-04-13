@@ -1,31 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { isAdminRequest } from '@/lib/auth';
-
-const VALID_DIFFICULTIES = ['EASY', 'MEDIUM', 'HARD'] as const;
-type Difficulty = typeof VALID_DIFFICULTIES[number];
-
-interface ChoiceInput {
-  label: string; text: string; isCorrect: boolean;
-  order: number; imageUrl?: string; blankNumber?: number;
-}
-
-function parseChoice(c: unknown): ChoiceInput | null {
-  if (typeof c !== 'object' || c === null) return null;
-  const b = c as Record<string, unknown>;
-  if (typeof b.label !== 'string' || b.label.trim() === '') return null;
-  if (typeof b.text !== 'string') return null;
-  if (typeof b.isCorrect !== 'boolean') return null;
-  if (typeof b.order !== 'number' || !Number.isInteger(b.order)) return null;
-  return {
-    label: b.label.trim(),
-    text: b.text.trim(),
-    isCorrect: b.isCorrect,
-    order: b.order,
-    imageUrl: typeof b.imageUrl === 'string' ? b.imageUrl : undefined,
-    blankNumber: typeof b.blankNumber === 'number' ? b.blankNumber : undefined,
-  };
-}
+import { parseChoice, parseDifficulty, type ChoiceInput } from '@/lib/validators';
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   if (!(await isAdminRequest(req))) {
@@ -48,7 +24,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
   if (typeof b.speechText === 'string') questionData.speechText = b.speechText.trim();
   if (typeof b.imageUrl === 'string') questionData.imageUrl = b.imageUrl;
   if (typeof b.order === 'number' && Number.isInteger(b.order)) questionData.order = b.order;
-  if (VALID_DIFFICULTIES.includes(b.difficulty as Difficulty)) questionData.difficulty = b.difficulty;
+  if (b.difficulty !== undefined) questionData.difficulty = parseDifficulty(b.difficulty);
 
   await prisma.question.update({ where: { id }, data: questionData });
 

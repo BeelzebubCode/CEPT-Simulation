@@ -62,6 +62,14 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
       }
 
+      // BUG-2: Prevent duplicate answer submission
+      const existingAnswer = await prisma.answer.findFirst({
+        where: { attemptId, questionId },
+      });
+      if (existingAnswer) {
+        return NextResponse.json({ error: 'Question already answered' }, { status: 409 });
+      }
+
       const blankChoiceIds: string[] = Array.isArray(body.blankChoiceIds) ? body.blankChoiceIds : [choiceId];
 
       // Batch 1 — parallel: fetch choices + section info
@@ -72,9 +80,11 @@ export async function POST(req: Request) {
 
       const choiceMap = new Map(choices.map(c => [c.id, c]));
       const firstCorrect = choiceMap.get(choiceId)?.isCorrect ?? false;
-      const newTheta = firstCorrect
-        ? parseFloat(body.theta ?? 0) + 0.5
-        : parseFloat(body.theta ?? 0) - 0.3;
+      // SEC-3: Clamp incoming theta to valid range to prevent client manipulation
+      const incomingTheta = Math.max(-3, Math.min(3, parseFloat(body.theta ?? 0) || 0));
+      const newTheta = Math.max(-3, Math.min(3,
+        firstCorrect ? incomingTheta + 0.5 : incomingTheta - 0.3
+      ));
 
       const difficulty = newTheta >= 1.5 ? 'HARD' : newTheta <= -0.5 ? 'EASY' : 'MEDIUM';
 
@@ -175,9 +185,10 @@ export async function POST(req: Request) {
         }
       }
 
-      const score = Math.min(50, Math.round(totalScore));
       const correctCount = answers.filter(a => a.isCorrect).length;
       const totalItems = uniqueQuestions.size;
+      // BUG-1: Normalize score to 0-50 scale based on proportion
+      const score = Math.min(50, Math.round((totalScore / totalItems) * 50));
 
       let cefr = 'Below A1';
       if (score >= 45) cefr = 'C2';

@@ -8,13 +8,7 @@ interface Question { id: string; text: string; passage?: string; speechText?: st
 interface Section { id: string; name: string; description?: string; type: string; timeLimit: number; order: number; questions: Question[]; }
 interface Toast { id: number; msg: string; ok: boolean; }
 
-const TYPE_BADGE: Record<string, { label: string; cls: string }> = {
-  LISTENING_TEXT:        { label: 'Listening Text',  cls: 'badge-listening-text' },
-  LISTENING_IMAGE:       { label: 'Listening Image', cls: 'badge-listening-image' },
-  READING_SIGNS:         { label: 'Reading Signs',   cls: 'badge-reading-signs' },
-  READING_FILL_BLANK:    { label: 'Fill Blank',      cls: 'badge-reading-fill' },
-  READING_COMPREHENSION: { label: 'Comprehension',   cls: 'badge-reading-comp' },
-};
+import { TYPE_BADGE } from '@/lib/constants';
 
 export default function SectionEditor() {
   const { id } = useParams();

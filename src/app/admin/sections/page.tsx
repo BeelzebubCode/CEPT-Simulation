@@ -8,13 +8,7 @@ interface Section {
   timeLimit: number; order: number; _count: { questions: number };
 }
 
-const TYPE_BADGE: Record<string, { label: string; cls: string }> = {
-  LISTENING_TEXT:        { label: 'Listening Text',  cls: 'badge-listening-text' },
-  LISTENING_IMAGE:       { label: 'Listening Image', cls: 'badge-listening-image' },
-  READING_SIGNS:         { label: 'Reading Signs',   cls: 'badge-reading-signs' },
-  READING_FILL_BLANK:    { label: 'Fill Blank',      cls: 'badge-reading-fill' },
-  READING_COMPREHENSION: { label: 'Comprehension',   cls: 'badge-reading-comp' },
-};
+import { TYPE_BADGE } from '@/lib/constants';
 
 const TYPE_OPTIONS = [
   { value: 'LISTENING_TEXT',        label: 'Listening Text' },

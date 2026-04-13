@@ -6,6 +6,7 @@ import { Volume2, VolumeX, Image, ChevronLeft, ChevronRight, CheckCircle, XCircl
 interface Choice { id: string; label: string; text: string; imageUrl?: string; isCorrect: boolean; order: number; blankNumber?: number; }
 interface Question { id: string; text: string; passage?: string; speechText?: string; imageUrl?: string; order: number; choices: Choice[]; }
 interface Section { id: string; name: string; description?: string; type: string; timeLimit: number; order: number; questions: Question[]; }
+interface SectionSummary { id: string; name: string; description?: string; type: string; timeLimit: number; order: number; _count: { questions: number }; }
 
 function FillBlankPassage({ question, blankAnswers, submitted, onBlankChange }: {
   question: Question;
@@ -85,22 +86,30 @@ function FillBlankPassage({ question, blankAnswers, submitted, onBlankChange }: 
 
 export default function PracticePage() {
   const router = useRouter();
-  const [sections, setSections] = useState<Section[]>([]);
+  const [sectionList, setSectionList] = useState<SectionSummary[]>([]);
+  const [loadedSections, setLoadedSections] = useState<Record<string, Section>>({});
   const [secIdx, setSecIdx] = useState(0);
   const [qIdx, setQIdx] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({}); // Selected choices
   const [blankAnswers, setBlankAnswers] = useState<Record<string, Record<number, string>>>({}); // questionId -> blankNumber -> choiceId
   const [blankSubmitted, setBlankSubmitted] = useState<Record<string, boolean>>({}); // questionId -> submitted
   const [loading, setLoading] = useState(true);
+  const [sectionLoading, setSectionLoading] = useState(false);
   const [speaking, setSpeaking] = useState(false);
   const [showSectionSelector, setShowSectionSelector] = useState(false);
 
+  // Fetch section list on mount
   useEffect(() => {
-    fetch('/api/exam').then(r => r.json()).then(data => {
-      setSections(data);
+    fetch('/api/exam').then(r => r.json()).then((data: SectionSummary[]) => {
+      setSectionList(data);
       setLoading(false);
+      // Restore saved state
       const saved = localStorage.getItem('cept_practice_answers');
       if (saved) setAnswers(JSON.parse(saved));
+      const savedBlank = localStorage.getItem('cept_practice_blankAnswers');
+      if (savedBlank) setBlankAnswers(JSON.parse(savedBlank));
+      const savedBlankSub = localStorage.getItem('cept_practice_blankSubmitted');
+      if (savedBlankSub) setBlankSubmitted(JSON.parse(savedBlankSub));
       const savedSec = localStorage.getItem('cept_practice_secIdx');
       const savedQ = localStorage.getItem('cept_practice_qIdx');
       if (savedSec) setSecIdx(parseInt(savedSec));
@@ -108,13 +117,33 @@ export default function PracticePage() {
     });
   }, []);
 
+  // Fetch section questions when secIdx changes
+  useEffect(() => {
+    if (sectionList.length === 0) return;
+    const sectionId = sectionList[secIdx]?.id;
+    if (!sectionId || loadedSections[sectionId]) return;
+    setSectionLoading(true);
+    fetch(`/api/exam?sectionId=${sectionId}`).then(r => r.json()).then((data: Section) => {
+      setLoadedSections(prev => ({ ...prev, [sectionId]: data }));
+      setSectionLoading(false);
+    }).catch(() => setSectionLoading(false));
+  }, [secIdx, sectionList, loadedSections]);
+
+  // Persist state
   useEffect(() => {
     if (Object.keys(answers).length > 0) localStorage.setItem('cept_practice_answers', JSON.stringify(answers));
   }, [answers]);
+  useEffect(() => {
+    if (Object.keys(blankAnswers).length > 0) localStorage.setItem('cept_practice_blankAnswers', JSON.stringify(blankAnswers));
+  }, [blankAnswers]);
+  useEffect(() => {
+    if (Object.keys(blankSubmitted).length > 0) localStorage.setItem('cept_practice_blankSubmitted', JSON.stringify(blankSubmitted));
+  }, [blankSubmitted]);
   useEffect(() => { localStorage.setItem('cept_practice_secIdx', String(secIdx)); }, [secIdx]);
   useEffect(() => { localStorage.setItem('cept_practice_qIdx', String(qIdx)); }, [qIdx]);
 
-  const sec = sections[secIdx];
+  const secSummary = sectionList[secIdx];
+  const sec = secSummary ? loadedSections[secSummary.id] : undefined;
   const isComprehension = sec?.type === 'READING_COMPREHENSION';
 
   // Group questions by passage for Reading Comprehension
@@ -172,7 +201,7 @@ export default function PracticePage() {
     setShowSectionSelector(false);
   };
 
-  if (loading) {
+  if (loading || !secSummary) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: 'linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)', color: '#4f46e5' }}>
         <Loader2 className="spinning-loader" size={48} style={{ animation: 'spin 1s linear infinite', marginBottom: 16 }} />
@@ -182,7 +211,17 @@ export default function PracticePage() {
       </div>
     );
   }
-  if (!sec || (!question && !currentGroup)) return <div style={{ padding: 40, textAlign: 'center' }}>No practice data found.</div>;
+  if (sectionLoading || !sec) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: 'linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%)', color: '#4f46e5' }}>
+        <Loader2 className="spinning-loader" size={48} style={{ animation: 'spin 1s linear infinite', marginBottom: 16 }} />
+        <h2 style={{ fontSize: 24, fontWeight: 600, margin: 0 }}>Loading {secSummary.name}</h2>
+        <p style={{ color: '#6b7280', marginTop: 8 }}>Fetching questions...</p>
+        <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
+  if (!question && !currentGroup) return <div style={{ padding: 40, textAlign: 'center' }}>No practice data found.</div>;
 
   const isListening = sec.type === 'LISTENING_TEXT' || sec.type === 'LISTENING_IMAGE';
   const isFillBlank = sec.type === 'READING_FILL_BLANK';
@@ -213,7 +252,7 @@ export default function PracticePage() {
             }}
           >
             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {sec.name}
+              {secSummary.name}
             </span>
             <span style={{ flexShrink: 0 }}>{showSectionSelector ? '▲' : '▼'}</span>
           </button>
@@ -221,8 +260,11 @@ export default function PracticePage() {
              <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => {
                 localStorage.removeItem('cept_practice_answers');
                 localStorage.removeItem('cept_practice_qIdx');
+                localStorage.removeItem('cept_practice_blankAnswers');
+                localStorage.removeItem('cept_practice_blankSubmitted');
                 setAnswers({});
                 setBlankAnswers({});
+                setBlankSubmitted({});
                 setQIdx(0);
              }}>Reset</button>
              <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => router.push('/')}>Exit</button>
@@ -243,9 +285,10 @@ export default function PracticePage() {
             เลือกหมวดข้อสอบ
           </p>
           <div style={{ maxWidth: 900, margin: '0 auto', display: 'grid', gap: 8 }}>
-            {sections.map((s, idx) => {
-              const done = s.questions.filter(q => answers[q.id]).length;
-              const total = s.questions.length;
+            {sectionList.map((s, idx) => {
+              const loaded = loadedSections[s.id];
+              const done = loaded ? loaded.questions.filter(q => answers[q.id]).length : 0;
+              const total = s._count.questions;
               const pct = total > 0 ? (done / total) * 100 : 0;
               const active = idx === secIdx;
               return (
