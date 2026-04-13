@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { revalidatePath } from 'next/cache';
 import prisma from '@/lib/prisma';
 import { isAdminRequest } from '@/lib/auth';
 import { parseChoice, parseDifficulty, type ChoiceInput } from '@/lib/validators';
@@ -48,7 +47,6 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
     where: { id },
     include: { choices: { orderBy: { order: 'asc' } } },
   });
-  revalidatePath('/api/exam');
   return NextResponse.json(updated);
 }
 
@@ -58,6 +56,5 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
   }
   const { id } = await params;
   await prisma.question.delete({ where: { id } });
-  revalidatePath('/api/exam');
   return NextResponse.json({ ok: true });
 }

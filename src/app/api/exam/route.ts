@@ -1,10 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
-// Cache durations (seconds)
-const LIST_CACHE = 'public, s-maxage=300, stale-while-revalidate=600';   // 5 min CDN, 10 min stale
-const SECTION_CACHE = 'public, s-maxage=600, stale-while-revalidate=900'; // 10 min CDN, 15 min stale
-
 /**
  * GET /api/exam — Practice mode data
  *
@@ -13,10 +9,8 @@ const SECTION_CACHE = 'public, s-maxage=600, stale-while-revalidate=900'; // 10 
  *
  * Exam Mode uses /api/adaptive which strips isCorrect via safeQuestion().
  *
- * To prevent abuse we only return one section at a time based on
- * an optional ?sectionId= query param.  Without it, return section list only.
- *
- * Responses are cached at the Vercel CDN edge to reduce DB load.
+ * No CDN caching — admin can update questions/images at any time and
+ * changes must be visible immediately. DB indexes keep queries fast.
  */
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -36,9 +30,7 @@ export async function GET(req: Request) {
         _count: { select: { questions: true } },
       },
     });
-    return NextResponse.json(sections, {
-      headers: { 'Cache-Control': LIST_CACHE },
-    });
+    return NextResponse.json(sections);
   }
 
   // Return single section with full question data for practice
@@ -56,8 +48,6 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: 'Section not found' }, { status: 404 });
   }
 
-  return NextResponse.json(section, {
-    headers: { 'Cache-Control': SECTION_CACHE },
-  });
+  return NextResponse.json(section);
 }
 
