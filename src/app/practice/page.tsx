@@ -333,12 +333,28 @@ export default function PracticePage() {
               if (isCur) {
                 bgColor = 'var(--accent)'; borderColor = 'var(--accent)'; color = '#fff';
               } else if (isAns) {
-                const correctChoiceId = q.choices.find(c => c.isCorrect)?.id;
-                const isCorrect = answers[q.id] === correctChoiceId;
-                if (isCorrect) {
+                // For fill-in-the-blank: check correctness from blankAnswers
+                if (isFillBlank && blankSubmitted[q.id]) {
+                  const blankNums = [...new Set(q.choices.map(c => c.blankNumber || 1))];
+                  const qBlankAnswers = blankAnswers[q.id] || {};
+                  const allBlanksCorrect = blankNums.every(bn => {
+                    const selectedId = qBlankAnswers[bn];
+                    const choice = q.choices.find(c => c.id === selectedId);
+                    return choice?.isCorrect;
+                  });
+                  if (allBlanksCorrect) {
                     bgColor = 'var(--correct-bg)'; borderColor = 'var(--correct)'; color = 'var(--correct)';
-                } else {
+                  } else {
                     bgColor = 'var(--wrong-bg)'; borderColor = 'var(--wrong)'; color = 'var(--wrong)';
+                  }
+                } else {
+                  const correctChoiceId = q.choices.find(c => c.isCorrect)?.id;
+                  const isCorrect = answers[q.id] === correctChoiceId;
+                  if (isCorrect) {
+                      bgColor = 'var(--correct-bg)'; borderColor = 'var(--correct)'; color = 'var(--correct)';
+                  } else {
+                      bgColor = 'var(--wrong-bg)'; borderColor = 'var(--wrong)'; color = 'var(--wrong)';
+                  }
                 }
               }
 

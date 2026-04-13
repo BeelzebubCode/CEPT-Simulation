@@ -8,20 +8,15 @@ function safeQuestion(q: { choices: { id: string; label: string; text: string; i
   return { ...q, choices: safeChoices };
 }
 
+// Single DB round-trip: fetch up to 10 candidates, prefer difficulty at app level
 async function pickQuestion(sectionId: string, excludeIds: string[], preferDifficulty: string) {
-  let q = await prisma.question.findFirst({
-    where: { sectionId, id: { notIn: excludeIds }, difficulty: preferDifficulty as 'EASY' | 'MEDIUM' | 'HARD' },
+  const candidates = await prisma.question.findMany({
+    where: { sectionId, id: { notIn: excludeIds } },
     include: { choices: { orderBy: { order: 'asc' } } },
     orderBy: { order: 'asc' },
+    take: 10,
   });
-  if (!q) {
-    q = await prisma.question.findFirst({
-      where: { sectionId, id: { notIn: excludeIds } },
-      include: { choices: { orderBy: { order: 'asc' } } },
-      orderBy: { order: 'asc' },
-    });
-  }
-  return q;
+  return candidates.find(q => q.difficulty === preferDifficulty) ?? candidates[0] ?? null;
 }
 
 export async function POST(req: Request) {
@@ -32,22 +27,29 @@ export async function POST(req: Request) {
 
     // ─── START ───────────────────────────────────────────────────────────────
     if (action === 'start') {
-      const attempt = await prisma.examAttempt.create({ data: { mode: 'exam', ceptScore: 0 } });
-
-      const firstSection = await prisma.section.findFirst({
-        orderBy: { order: 'asc' },
-        include: { questions: { where: { difficulty: 'MEDIUM' }, include: { choices: { orderBy: { order: 'asc' } } }, orderBy: { order: 'asc' }, take: 1 } },
-      });
+      const [attempt, firstSection] = await Promise.all([
+        prisma.examAttempt.create({ data: { mode: 'exam', ceptScore: 0 } }),
+        prisma.section.findFirst({
+          orderBy: { order: 'asc' },
+          include: {
+            questions: {
+              where: { difficulty: 'MEDIUM' },
+              include: { choices: { orderBy: { order: 'asc' } } },
+              orderBy: { order: 'asc' },
+              take: 1,
+            },
+          },
+        }),
+      ]);
 
       if (!firstSection || firstSection.questions.length === 0) {
         return NextResponse.json({ error: 'No questions found' }, { status: 404 });
       }
 
-      const firstQ = firstSection.questions[0];
       return NextResponse.json({
         attemptId: attempt.id,
         theta: 0,
-        nextQuestion: safeQuestion(firstQ),
+        nextQuestion: safeQuestion(firstSection.questions[0]),
         currentSectionId: firstSection.id,
         currentSectionName: firstSection.name,
         currentSectionType: firstSection.type,
@@ -60,53 +62,54 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Missing parameters' }, { status: 400 });
       }
 
-      // blankChoiceIds: for fill-blank questions, all blank answers in order
-      // If not provided, treat as a single-answer question
       const blankChoiceIds: string[] = Array.isArray(body.blankChoiceIds) ? body.blankChoiceIds : [choiceId];
 
-      // Save one Answer record per blank choice
-      const choices = await prisma.choice.findMany({ where: { id: { in: blankChoiceIds } } });
+      // Batch 1 — parallel: choices + section info (no sequential dependency)
+      const [choices, currentSection] = await Promise.all([
+        prisma.choice.findMany({ where: { id: { in: blankChoiceIds } } }),
+        prisma.section.findUnique({ where: { id: currentSectionId } }),
+      ]);
+
       const choiceMap = new Map(choices.map(c => [c.id, c]));
-
-      await prisma.answer.createMany({
-        data: blankChoiceIds.map(cid => ({
-          attemptId,
-          questionId,
-          choiceId: cid,
-          isCorrect: choiceMap.get(cid)?.isCorrect ?? false,
-        })),
-      });
-
-      // Theta update based on first (or only) choice correctness
       const firstCorrect = choiceMap.get(choiceId)?.isCorrect ?? false;
-      const currentTheta = parseFloat(body.theta ?? 0);
-      const newTheta = firstCorrect ? currentTheta + 0.5 : currentTheta - 0.3;
+      const newTheta = firstCorrect
+        ? parseFloat(body.theta ?? 0) + 0.5
+        : parseFloat(body.theta ?? 0) - 0.3;
 
-      let difficulty = 'MEDIUM';
-      if (newTheta >= 1.5) difficulty = 'HARD';
-      else if (newTheta <= -0.5) difficulty = 'EASY';
+      const difficulty = newTheta >= 1.5 ? 'HARD' : newTheta <= -0.5 ? 'EASY' : 'MEDIUM';
 
-      // Stay in same section if under limit
+      const answerData = blankChoiceIds.map(cid => ({
+        attemptId, questionId, choiceId: cid,
+        isCorrect: choiceMap.get(cid)?.isCorrect ?? false,
+      }));
+
+      // Same section path
       if (sectionQCount < MAX_PER_SECTION) {
-        const nextQ = await pickQuestion(currentSectionId, answeredIds, difficulty);
+        // Batch 2 — parallel: save answer + pick next question
+        const [, nextQ] = await Promise.all([
+          prisma.answer.createMany({ data: answerData }),
+          pickQuestion(currentSectionId, answeredIds, difficulty),
+        ]);
+
         if (nextQ) {
-          const section = await prisma.section.findUnique({ where: { id: currentSectionId } });
           return NextResponse.json({
             nextQuestion: safeQuestion(nextQ),
             currentSectionId,
-            currentSectionName: section?.name,
-            currentSectionType: section?.type,
+            currentSectionName: currentSection?.name,
+            currentSectionType: currentSection?.type,
             sectionChanged: false,
           });
         }
       }
 
-      // Move to next section
-      const currentSection = await prisma.section.findUnique({ where: { id: currentSectionId } });
-      const nextSection = await prisma.section.findFirst({
-        where: { order: { gt: currentSection?.order ?? 0 } },
-        orderBy: { order: 'asc' },
-      });
+      // Section change — Batch 2: save answers + find next section in parallel
+      const [, nextSection] = await Promise.all([
+        prisma.answer.createMany({ data: answerData }),
+        prisma.section.findFirst({
+          where: { order: { gt: currentSection?.order ?? 0 } },
+          orderBy: { order: 'asc' },
+        }),
+      ]);
 
       if (nextSection) {
         const firstInNext = await pickQuestion(nextSection.id, answeredIds, 'MEDIUM');
@@ -121,15 +124,12 @@ export async function POST(req: Request) {
         }
       }
 
-      // No more sections → exam done
       return NextResponse.json({ nextQuestion: null });
     }
 
     // ─── FINISH ───────────────────────────────────────────────────────────────
     if (action === 'finish') {
       const answers = await prisma.answer.findMany({ where: { attemptId } });
-
-      // Count unique questions answered (fill-blank has multiple Answer rows per question)
       const uniqueQuestions = new Set(answers.map(a => a.questionId));
 
       if (uniqueQuestions.size < 10) {
@@ -139,17 +139,13 @@ export async function POST(req: Request) {
         );
       }
 
-      // Score: 1 point per question
-      // Fill-blank: partial credit — correct_blanks / total_blanks (sums to 1)
       let totalScore = 0;
       for (const qId of uniqueQuestions) {
         const qAnswers = answers.filter(a => a.questionId === qId);
         if (qAnswers.length === 1) {
           totalScore += qAnswers[0].isCorrect ? 1 : 0;
         } else {
-          // Fill-blank partial credit: each blank = 1/N
-          const correct = qAnswers.filter(a => a.isCorrect).length;
-          totalScore += correct / qAnswers.length;
+          totalScore += qAnswers.filter(a => a.isCorrect).length / qAnswers.length;
         }
       }
 
@@ -157,7 +153,6 @@ export async function POST(req: Request) {
       const correctCount = answers.filter(a => a.isCorrect).length;
       const totalItems = uniqueQuestions.size;
 
-      // CEFR mapping (out of 50)
       let cefr = 'Below A1';
       if (score >= 45) cefr = 'C2';
       else if (score >= 38) cefr = 'C1';
