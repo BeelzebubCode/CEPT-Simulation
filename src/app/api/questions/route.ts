@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import prisma from '@/lib/prisma';
 import { isAdminRequest } from '@/lib/auth';
 import { parseChoice, parseDifficulty, type ChoiceInput } from '@/lib/validators';
@@ -47,5 +48,6 @@ export async function POST(req: Request) {
     },
     include: { choices: { orderBy: { order: 'asc' } } },
   });
+  revalidatePath('/api/exam');
   return NextResponse.json(question, { status: 201 });
 }

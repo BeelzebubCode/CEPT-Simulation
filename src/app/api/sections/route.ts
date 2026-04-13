@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import prisma from '@/lib/prisma';
 import { isAdminRequest } from '@/lib/auth';
 
@@ -48,5 +49,6 @@ export async function POST(req: Request) {
   const data = parseSectionBody(body);
   if (!data) return NextResponse.json({ error: 'Invalid input' }, { status: 422 });
   const section = await prisma.section.create({ data });
+  revalidatePath('/api/exam');
   return NextResponse.json(section, { status: 201 });
 }
