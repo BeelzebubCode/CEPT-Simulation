@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server';
 import { createToken, COOKIE_NAME, MAX_AGE } from '@/lib/auth';
+import prisma from '@/lib/prisma';
 
-// In-memory rate limiter: max 5 attempts per IP per 15 minutes
-const attempts = new Map<string, { count: number; resetAt: number }>();
 const MAX_ATTEMPTS = 5;
-const WINDOW_MS = 15 * 60 * 1000;
+const WINDOW_MS = 15 * 60 * 1000; // 15 minutes
 
 function getClientIp(req: Request): string {
   return (
@@ -14,25 +13,29 @@ function getClientIp(req: Request): string {
   );
 }
 
-function checkRateLimit(ip: string): boolean {
-  const now = Date.now();
-  const entry = attempts.get(ip);
-  if (!entry || now > entry.resetAt) {
-    attempts.set(ip, { count: 1, resetAt: now + WINDOW_MS });
-    return true; // allowed
-  }
-  if (entry.count >= MAX_ATTEMPTS) return false; // blocked
-  entry.count++;
-  return true; // allowed
+async function checkRateLimit(ip: string): Promise<boolean> {
+  const windowStart = new Date(Date.now() - WINDOW_MS);
+  // Cleanup old entries (fire-and-forget, don't block the response)
+  prisma.loginAttempt.deleteMany({ where: { createdAt: { lt: windowStart } } }).catch(() => {});
+  const count = await prisma.loginAttempt.count({
+    where: { ip, createdAt: { gte: windowStart } },
+  });
+  return count < MAX_ATTEMPTS;
 }
 
-function clearRateLimit(ip: string) {
-  attempts.delete(ip);
+async function recordAttempt(ip: string): Promise<void> {
+  await prisma.loginAttempt.create({ data: { ip } });
+}
+
+async function clearAttempts(ip: string): Promise<void> {
+  await prisma.loginAttempt.deleteMany({ where: { ip } });
 }
 
 export async function POST(req: Request) {
   const ip = getClientIp(req);
-  if (!checkRateLimit(ip)) {
+
+  const allowed = await checkRateLimit(ip);
+  if (!allowed) {
     return NextResponse.json(
       { error: 'Too many attempts. Try again in 15 minutes.' },
       { status: 429 },
@@ -58,11 +61,12 @@ export async function POST(req: Request) {
   const adminPassword = process.env.ADMIN_PASSWORD;
 
   if (!adminPassword || password !== adminPassword) {
+    await recordAttempt(ip);
     return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
   }
 
-  // Success — clear rate limit counter for this IP
-  clearRateLimit(ip);
+  // Success — clear all attempts for this IP
+  await clearAttempts(ip);
 
   const token = await createToken();
   const res = NextResponse.json({ ok: true });

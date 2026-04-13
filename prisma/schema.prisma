@@ -88,3 +88,11 @@ model Answer {
 
   @@index([attemptId])
 }
+
+model LoginAttempt {
+  id        String   @id @default(cuid())
+  ip        String
+  createdAt DateTime @default(now())
+
+  @@index([ip, createdAt])
+}
