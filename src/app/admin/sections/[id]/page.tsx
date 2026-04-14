@@ -227,50 +227,77 @@ export default function SectionEditor() {
 
                 {isFillBlank ? (
                   /* Fill-blank: grouped */
-                  [1,2,3,4,5].map(bn => {
-                    const blankChoices = (editForm.choices || []).filter(c => (c.blankNumber || 1) === bn);
-                    if (blankChoices.length === 0) return null;
-                    return (
-                      <div key={bn} style={{ marginBottom: 12, padding: 12, backgroundColor: 'var(--admin-bg)', borderRadius: 8, border: '1px solid var(--admin-border)' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                          <span className="admin-badge badge-reading-fill">Blank [{bn}]</span>
-                          <button className="admin-btn admin-btn-primary" style={{ padding: '4px 10px', fontSize: 11 }} onClick={() => {
-                            const labels = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-                            const newChoice = { label: labels[blankChoices.length] || labels[0], text: '', isCorrect: false, order: (editForm.choices || []).length + 1, blankNumber: bn };
-                            setEditForm({ ...editForm, choices: [...(editForm.choices || []), newChoice] });
-                          }}><Plus size={10} /> Add</button>
-                        </div>
-                        {blankChoices.map(c => {
-                          const ci = (editForm.choices || []).indexOf(c);
-                          return (
-                            <div key={ci} style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 }}>
-                              <span style={{ color: '#fff', fontWeight: 700, width: 22, fontSize: 13 }}>{c.label}</span>
-                              <input className="admin-input" style={{ flex: 1 }} value={c.text || ''}
-                                onChange={e => {
-                                  const nc = [...(editForm.choices || [])];
-                                  nc[ci] = { ...nc[ci], text: e.target.value };
-                                  setEditForm({ ...editForm, choices: nc });
-                                }} />
-                              <label style={{ color: '#94a3b8', fontSize: 12, display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                                <input type="radio" name={`correct-blank-${bn}`} checked={c.isCorrect || false}
-                                  onChange={() => {
-                                    const nc = (editForm.choices || []).map(ch => ({
-                                      ...ch, isCorrect: (ch.blankNumber || 1) === bn ? ch === c : ch.isCorrect,
-                                    }));
-                                    setEditForm({ ...editForm, choices: nc });
-                                  }} />
-                                ✓
-                              </label>
-                              <button style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 4, fontSize: 14, fontWeight: 700 }}
-                                onClick={() => setEditForm({ ...editForm, choices: (editForm.choices || []).filter((_, i) => i !== ci) })}>
-                                ✕
+                  <>
+                    {[1,2,3,4,5].map(bn => {
+                      const blankChoices = (editForm.choices || []).filter(c => (c.blankNumber || 1) === bn);
+                      if (blankChoices.length === 0) return null;
+                      return (
+                        <div key={bn} style={{ marginBottom: 12, padding: 12, backgroundColor: 'var(--admin-bg)', borderRadius: 8, border: '1px solid var(--admin-border)' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                              <span className="admin-badge badge-reading-fill">Blank [{bn}]</span>
+                              {/* Delete whole blank group */}
+                              <button style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '2px 6px', fontSize: 12, borderRadius: 4 }}
+                                title={`Delete Blank [${bn}]`}
+                                onClick={() => setEditForm({ ...editForm, choices: (editForm.choices || []).filter(c => (c.blankNumber || 1) !== bn) })}>
+                                Delete blank
                               </button>
                             </div>
-                          );
-                        })}
-                      </div>
-                    );
-                  })
+                            <button className="admin-btn admin-btn-primary" style={{ padding: '4px 10px', fontSize: 11 }} onClick={() => {
+                              const labels = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                              const newChoice = { label: labels[blankChoices.length] || labels[0], text: '', isCorrect: false, order: (editForm.choices || []).length + 1, blankNumber: bn };
+                              setEditForm({ ...editForm, choices: [...(editForm.choices || []), newChoice] });
+                            }}><Plus size={10} /> Add option</button>
+                          </div>
+                          {blankChoices.map(c => {
+                            const ci = (editForm.choices || []).indexOf(c);
+                            return (
+                              <div key={ci} style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 6 }}>
+                                <span style={{ color: '#fff', fontWeight: 700, width: 22, fontSize: 13 }}>{c.label}</span>
+                                <input className="admin-input" style={{ flex: 1 }} value={c.text || ''}
+                                  onChange={e => {
+                                    const nc = [...(editForm.choices || [])];
+                                    nc[ci] = { ...nc[ci], text: e.target.value };
+                                    setEditForm({ ...editForm, choices: nc });
+                                  }} />
+                                <label style={{ color: '#94a3b8', fontSize: 12, display: 'flex', alignItems: 'center', gap: 4, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                                  <input type="radio" name={`correct-blank-${bn}`} checked={c.isCorrect || false}
+                                    onChange={() => {
+                                      const nc = (editForm.choices || []).map(ch => ({
+                                        ...ch, isCorrect: (ch.blankNumber || 1) === bn ? ch === c : ch.isCorrect,
+                                      }));
+                                      setEditForm({ ...editForm, choices: nc });
+                                    }} />
+                                  ✓
+                                </label>
+                                <button style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 4, fontSize: 14, fontWeight: 700 }}
+                                  onClick={() => setEditForm({ ...editForm, choices: (editForm.choices || []).filter((_, i) => i !== ci) })}>
+                                  ✕
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })}
+                    {/* Add new blank group */}
+                    {(() => {
+                      const existingBlanks = [...new Set((editForm.choices || []).map(c => c.blankNumber || 1))];
+                      const nextBn = existingBlanks.length > 0 ? Math.max(...existingBlanks) + 1 : 1;
+                      if (nextBn > 5) return null;
+                      return (
+                        <button className="admin-btn admin-btn-ghost" style={{ width: '100%', marginTop: 4, fontSize: 13, justifyContent: 'center' }}
+                          onClick={() => {
+                            const newChoices = ['A','B','C','D'].map((label, i) => ({
+                              label, text: '', isCorrect: i === 0, order: (editForm.choices || []).length + i + 1, blankNumber: nextBn,
+                            }));
+                            setEditForm({ ...editForm, choices: [...(editForm.choices || []), ...newChoices] });
+                          }}>
+                          <Plus size={13} /> Add Blank [{nextBn}]
+                        </button>
+                      );
+                    })()}
+                  </>
                 ) : (
                   /* Standard flat choices */
                   <>
