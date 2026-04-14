@@ -230,6 +230,64 @@ body {
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0; line-height: 2.4; font-size: 16px;
   color: #374151; margin-bottom: 8px; }
 
+/* ===== READING COMPREHENSION ===== */
+.reading-comprehension-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 20px; height: calc(100vh - 190px); overflow: hidden;
+}
+.rc-panel { overflow-y: auto; border-radius: 16px; background: #fff;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; }
+.rc-passage { padding: 28px; line-height: 2; }
+.rc-passage-badge { display: inline-flex; align-items: center; gap: 8px;
+  font-weight: 700; font-size: 13px; color: #1565c0; background: #e3f2fd;
+  padding: 5px 14px; border-radius: 20px; margin-bottom: 16px; letter-spacing: 0.3px; }
+.rc-passage-text { font-size: 15px; color: #334155; white-space: pre-line; }
+.rc-questions { padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+
+/* Question cards */
+.rc-q-card { background: #fff; border: 2px solid #e2e8f0; border-radius: 14px;
+  padding: 16px 18px; transition: all 0.25s ease; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+.rc-q-card.rc-correct { border-color: #16a34a; box-shadow: 0 2px 8px rgba(22,163,74,0.12); }
+.rc-q-card.rc-wrong { border-color: #dc2626; box-shadow: 0 2px 8px rgba(220,38,38,0.12); }
+.rc-q-header { display: flex; gap: 10px; margin-bottom: 12px; align-items: flex-start; }
+.rc-q-num { flex-shrink: 0; width: 28px; height: 28px; border-radius: 8px;
+  background: var(--accent); color: #fff; font-size: 13px; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+.rc-q-num.correct { background: #16a34a; }
+.rc-q-num.wrong { background: #dc2626; }
+.rc-q-text { font-size: 14px; font-weight: 600; color: #1e293b; line-height: 1.6; }
+
+/* Select dropdown */
+.rc-select { width: 100%; padding: 10px 14px; border: 1.5px solid #cbd5e1; border-radius: 10px;
+  font-size: 14px; color: #475569; background: #f8fafc; cursor: pointer;
+  font-family: inherit; appearance: auto; transition: border-color 0.2s; }
+.rc-select:focus { border-color: var(--accent); outline: none; box-shadow: 0 0 0 3px rgba(21,101,192,0.1); }
+
+/* Answer feedback */
+.rc-answer { display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 10px 14px; border-radius: 10px; font-size: 14px; font-weight: 600; }
+.rc-answer.correct { background: linear-gradient(135deg, #dcfce7, #bbf7d0); color: #15803d; }
+.rc-answer.wrong { background: linear-gradient(135deg, #fee2e2, #fecaca); color: #dc2626; }
+.rc-icon { font-size: 16px; }
+.rc-correct-ans { margin-left: auto; color: #15803d; font-size: 13px; font-weight: 500; }
+
+/* Score bar */
+.rc-score { padding: 18px 20px; border-radius: 14px; background: #fff;
+  border: 2px solid #93c5fd; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+.rc-score.perfect { border-color: #86efac; }
+.rc-score.low { border-color: #fca5a5; }
+.rc-score-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;
+  font-weight: 700; font-size: 15px; color: #1e293b; }
+.rc-score-val { font-weight: 800; font-size: 18px; color: #0284c7; }
+.rc-score.perfect .rc-score-val { color: #16a34a; }
+.rc-score.low .rc-score-val { color: #dc2626; }
+.rc-bar-bg { height: 8px; border-radius: 4px; background: #f1f5f9; overflow: hidden; }
+.rc-bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #0284c7, #38bdf8);
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
+.rc-score.perfect .rc-bar-fill { background: linear-gradient(90deg, #16a34a, #22c55e); }
+.rc-score.low .rc-bar-fill { background: linear-gradient(90deg, #dc2626, #f87171); }
+.rc-score-msg { font-size: 12px; color: #64748b; margin-top: 6px; text-align: center; }
+
 /* ===== NAV BAR ===== */
 .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card);
   border-top: 1px solid var(--border); padding: 12px 24px;
@@ -466,16 +524,12 @@ body {
     height: auto !important;
     overflow: visible !important;
   }
-  .reading-comprehension-grid > div {
-    border-right: none !important;
-    max-height: none !important;
+  .rc-panel {
     overflow-y: visible !important;
   }
-  .reading-comprehension-grid > div:first-child {
-    padding: 12px 4px !important;
+  .rc-passage {
     max-height: 250px !important;
     overflow-y: auto !important;
-    border-bottom: 1px solid #e2e8f0 !important;
   }
   .main-content.main-content-wide { max-width: 100%; padding: 16px 12px 120px; }
 }
