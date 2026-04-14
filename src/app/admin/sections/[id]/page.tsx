@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
-import { Volume2, Save, Plus, Pencil, Trash2, Image, CheckCircle, XCircle } from 'lucide-react';
+import { Volume2, Save, Plus, Pencil, Trash2, Image, CheckCircle, XCircle, ChevronUp, ChevronDown } from 'lucide-react';
 
 interface Choice { id: string; label: string; text: string; imageUrl?: string; isCorrect: boolean; order: number; blankNumber?: number; }
 interface Question { id: string; text: string; passage?: string; speechText?: string; imageUrl?: string; order: number; choices: Choice[]; }
@@ -82,6 +82,21 @@ export default function SectionEditor() {
     await fetch(`/api/questions/${qId}`, { method: 'DELETE' });
     load();
     pushToast('Question deleted');
+  };
+
+  const moveQuestion = async (qi: number, dir: -1 | 1) => {
+    if (!section) return;
+    const qs = section.questions;
+    const target = qi + dir;
+    if (target < 0 || target >= qs.length) return;
+    const a = qs[qi];
+    const b = qs[target];
+    // Swap order values via two parallel PUTs
+    await Promise.all([
+      fetch(`/api/questions/${a.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ order: b.order }) }),
+      fetch(`/api/questions/${b.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ order: a.order }) }),
+    ]);
+    load();
   };
 
   const uploadImage = async (file: File) => {
@@ -416,6 +431,19 @@ export default function SectionEditor() {
                 </div>
 
                 <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                  {/* Move up/down */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <button className="admin-btn admin-btn-ghost" disabled={qi === 0}
+                      style={{ fontSize: 11, padding: '3px 7px', opacity: qi === 0 ? 0.3 : 1 }}
+                      onClick={() => moveQuestion(qi, -1)}>
+                      <ChevronUp size={13} />
+                    </button>
+                    <button className="admin-btn admin-btn-ghost" disabled={qi === section.questions.length - 1}
+                      style={{ fontSize: 11, padding: '3px 7px', opacity: qi === section.questions.length - 1 ? 0.3 : 1 }}
+                      onClick={() => moveQuestion(qi, 1)}>
+                      <ChevronDown size={13} />
+                    </button>
+                  </div>
                   <button className="admin-btn admin-btn-ghost" style={{ fontSize: 12, padding: '6px 12px' }} onClick={() => startEdit(q)}>
                     <Pencil size={12} /> Edit
                   </button>
