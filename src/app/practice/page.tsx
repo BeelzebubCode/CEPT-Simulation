@@ -467,13 +467,21 @@ export default function PracticePage() {
                 const level = isAllCorrect ? 'perfect' : pct >= 60 ? 'good' : 'low';
                 return (
                   <div className={`rc-score ${level}`}>
-                    <div className="rc-score-top">
-                      <span>{isAllCorrect ? '🎉 Perfect!' : 'Score'}</span>
-                      <span className="rc-score-val">{correctCount}/{totalCount}</span>
+                    <div className="rc-score-ring">
+                      <svg viewBox="0 0 36 36">
+                        <circle className="ring-bg" cx="18" cy="18" r="15" />
+                        <circle className="ring-fill" cx="18" cy="18" r="15"
+                          strokeDasharray={`${pct * 0.94} 100`} />
+                      </svg>
+                      <span className="rc-score-pct">{pct}%</span>
                     </div>
-                    <div className="rc-bar-bg"><div className="rc-bar-fill" style={{ width: `${pct}%` }} /></div>
-                    <div className="rc-score-msg">
-                      {isAllCorrect ? 'You answered every question correctly!' : pct >= 60 ? 'Good job! Review incorrect answers.' : 'Review the passage and check the correct answers.'}
+                    <div className="rc-score-info">
+                      <div className="rc-score-title">
+                        {isAllCorrect ? '🎉 Perfect Score!' : `${correctCount} / ${totalCount} Correct`}
+                      </div>
+                      <div className="rc-score-msg">
+                        {isAllCorrect ? 'You answered every question correctly!' : pct >= 60 ? 'Good job! Review incorrect answers above.' : 'Review the passage to understand the correct answers.'}
+                      </div>
                     </div>
                   </div>
                 );
