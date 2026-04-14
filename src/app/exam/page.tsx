@@ -239,7 +239,7 @@ export default function AdaptiveExamPage() {
               <div className="fill-blank-passage">
                 {(() => {
                   if (!question.passage) return null;
-                  const parts = question.passage.split(/\[(\d+)\]_____/);
+                  const parts = question.passage.split(/\[(\d+)\]\s*_*/);
                   return parts.map((part, i) => {
                     if (i % 2 === 0) return <span key={i}>{part}</span>;
                     const blankNum = parseInt(part);

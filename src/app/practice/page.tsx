@@ -17,8 +17,10 @@ function FillBlankPassage({ question, blankAnswers, submitted, onBlankChange }: 
   if (!question.passage) return null;
   const blankNums = [...new Set(question.choices.map(c => c.blankNumber || 1))].sort((a, b) => a - b);
 
-  // Split passage by [N]_____ markers
-  const parts = question.passage.split(/\[(\d+)\]_____/);
+  // Split passage by blank markers — support various formats:
+  // [1]_____  [1] ____  [1]___  [1] etc.
+  const parts = question.passage.split(/\[(\d+)\]\s*_*/);
+
 
   return (
     <div className="fill-blank-passage">
