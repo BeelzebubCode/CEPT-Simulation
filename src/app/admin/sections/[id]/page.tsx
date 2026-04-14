@@ -19,6 +19,8 @@ export default function SectionEditor() {
   const [saving, setSaving]       = useState(false);
   const [toasts, setToasts]       = useState<Toast[]>([]);
   const [quickPaste, setQuickPaste] = useState<Record<number, string>>({});
+  const [fullImportText, setFullImportText] = useState('');
+  const [showFullImport, setShowFullImport] = useState(false);
   const [confirmDelQ, setConfirmDelQ] = useState<{ open: boolean; qId: string; qText: string }>({ open: false, qId: '', qText: '' });
 
   const pushToast = (msg: string, ok = true) => {
@@ -85,18 +87,50 @@ export default function SectionEditor() {
     pushToast('Question deleted');
   };
 
-  /** Parse "A. from / B. since ✅ / C. for / D. after" → choices array */
+  /** Parse "A. from / B. since ✅ / C. for / D. after" → choices for one blank */
   const parseChoiceShorthand = (raw: string, blankNumber: number, orderOffset: number) => {
     return raw.split('/').map((part, i) => {
       const trimmed = part.trim();
       const isCorrect = trimmed.includes('✅') || trimmed.includes('*');
       const cleaned = trimmed.replace(/✅|\*/g, '').trim();
-      // Match "A. text" or just "text"
       const match = cleaned.match(/^([A-Za-z])\.\s*(.+)$/);
       const label = match ? match[1].toUpperCase() : String.fromCharCode(65 + i);
       const text  = match ? match[2].trim() : cleaned;
       return { label, text, isCorrect, order: orderOffset + i + 1, blankNumber };
     }).filter(c => c.text.length > 0);
+  };
+
+  /**
+   * Parse full multi-blank import text:
+   *   "Blank [1]: A. every / B. whole / C. all ✅ / D. most"
+   *   "Blank [2]: A. if / B. unless ✅ / ..."
+   * Also handles single-line without Blank prefix (treated as Blank 1).
+   */
+  const parseFullImport = (raw: string): ReturnType<typeof parseChoiceShorthand> | null => {
+    const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+    const all: ReturnType<typeof parseChoiceShorthand> = [];
+
+    // Check if any line starts with "Blank [N]:"
+    const hasBlankHeaders = lines.some(l => /^blank\s*\[?\d+\]?\s*:/i.test(l));
+
+    if (!hasBlankHeaders) {
+      // Single-line or no headers — treat whole thing as Blank 1
+      const joined = lines.join(' / ');
+      const parsed = parseChoiceShorthand(joined, 1, 0);
+      return parsed.length > 0 ? parsed : null;
+    }
+
+    let orderOffset = 0;
+    for (const line of lines) {
+      const header = line.match(/^blank\s*\[?(\d+)\]?\s*:\s*(.+)$/i);
+      if (!header) continue;
+      const bn = parseInt(header[1]);
+      const choicesPart = header[2];
+      const parsed = parseChoiceShorthand(choicesPart, bn, orderOffset);
+      all.push(...parsed);
+      orderOffset += parsed.length;
+    }
+    return all.length > 0 ? all : null;
   };
 
   const moveQuestion = async (qi: number, dir: -1 | 1) => {
@@ -258,6 +292,47 @@ export default function SectionEditor() {
                 {isFillBlank ? (
                   /* Fill-blank: grouped */
                   <>
+                    {/* ── Full Import ── */}
+                    <div style={{ marginBottom: 14, padding: 12, background: 'rgba(99,102,241,0.07)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: 8 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: 12, fontWeight: 600, color: '#818cf8' }}>Full Import — วางทีเดียวทุก Blank</span>
+                        <button className="admin-btn admin-btn-ghost" style={{ fontSize: 11, padding: '3px 10px' }}
+                          onClick={() => { setShowFullImport(v => !v); setFullImportText(''); }}>
+                          {showFullImport ? 'ซ่อน' : 'เปิด'}
+                        </button>
+                      </div>
+                      {showFullImport && (
+                        <>
+                          <textarea
+                            className="admin-input admin-textarea"
+                            rows={6}
+                            style={{ marginTop: 10, fontSize: 12, fontFamily: 'monospace' }}
+                            placeholder={`Blank [1]: A. every / B. whole / C. all ✅ / D. most\nBlank [2]: A. if / B. unless ✅ / C. except / D. without\n\nหรือบรรทัดเดียว:\nA. from / B. since ✅ / C. for / D. after`}
+                            value={fullImportText}
+                            onChange={e => setFullImportText(e.target.value)}
+                          />
+                          <div style={{ display: 'flex', gap: 8, marginTop: 8, alignItems: 'center' }}>
+                            <button
+                              className="admin-btn admin-btn-primary"
+                              style={{ fontSize: 12 }}
+                              disabled={!fullImportText.trim()}
+                              onClick={() => {
+                                const parsed = parseFullImport(fullImportText);
+                                if (!parsed || parsed.length === 0) return;
+                                setEditForm({ ...editForm, choices: parsed });
+                                setFullImportText('');
+                                setShowFullImport(false);
+                                pushToast(`Imported ${parsed.length} choices`);
+                              }}
+                            >
+                              Import ทั้งหมด
+                            </button>
+                            <span style={{ fontSize: 11, color: '#475569' }}>จะ replace choices ทุก blank เดิม</span>
+                          </div>
+                        </>
+                      )}
+                    </div>
+
                     {[1,2,3,4,5].map(bn => {
                       const blankChoices = (editForm.choices || []).filter(c => (c.blankNumber || 1) === bn);
                       if (blankChoices.length === 0) return null;
