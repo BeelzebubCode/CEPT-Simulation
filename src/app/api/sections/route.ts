@@ -5,7 +5,7 @@ import { isAdminRequest } from '@/lib/auth';
 
 const VALID_TYPES = [
   'LISTENING_TEXT', 'LISTENING_IMAGE', 'READING_SIGNS',
-  'READING_FILL_BLANK', 'READING_COMPREHENSION',
+  'READING_SENTENCE', 'READING_FILL_BLANK', 'READING_COMPREHENSION',
 ] as const;
 type SectionType = typeof VALID_TYPES[number];
 

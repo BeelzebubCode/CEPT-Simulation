@@ -14,6 +14,7 @@ const TYPE_OPTIONS = [
   { value: 'LISTENING_TEXT',        label: 'Listening Text' },
   { value: 'LISTENING_IMAGE',       label: 'Listening Image' },
   { value: 'READING_SIGNS',         label: 'Reading Signs' },
+  { value: 'READING_SENTENCE',      label: 'Reading Sentence Fill' },
   { value: 'READING_FILL_BLANK',    label: 'Reading Fill Blank' },
   { value: 'READING_COMPREHENSION', label: 'Reading Comprehension' },
 ];

@@ -495,6 +495,43 @@ export default function SectionEditor() {
                       const nextLabel = labels[(editForm.choices || []).length] || labels[0];
                       setEditForm({ ...editForm, choices: [...(editForm.choices || []), { label: nextLabel, text: '', isCorrect: false, order: (editForm.choices || []).length + 1 }] });
                     }}><Plus size={12} /> Add Choice</button>
+
+                    {/* Quick import for Sentence Fill */}
+                    {section.type === 'READING_SENTENCE' && (
+                      <div style={{ marginTop: 12, padding: 12, background: 'rgba(14,165,233,0.07)', border: '1px solid rgba(14,165,233,0.2)', borderRadius: 8 }}>
+                        <div style={{ fontSize: 11, color: '#38bdf8', marginBottom: 6, fontWeight: 600 }}>
+                          Quick Import — วาง <code style={{ background: '#0f172a', padding: '1px 5px', borderRadius: 3 }}>A. try / B. struggle / C. aim / D. effort ✅</code>
+                        </div>
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <input
+                            className="admin-input"
+                            style={{ flex: 1, fontSize: 12 }}
+                            placeholder="A. word / B. word ✅ / C. word / D. word"
+                            value={quickPaste[0] || ''}
+                            onChange={e => setQuickPaste(p => ({ ...p, [0]: e.target.value }))}
+                            onKeyDown={e => {
+                              if (e.key === 'Enter') (e.currentTarget.nextElementSibling as HTMLElement)?.click();
+                            }}
+                          />
+                          <button
+                            className="admin-btn admin-btn-primary"
+                            style={{ fontSize: 11, padding: '4px 12px', whiteSpace: 'nowrap' }}
+                            disabled={!quickPaste[0]?.trim()}
+                            onClick={() => {
+                              const parsed = parseChoiceShorthand(quickPaste[0] || '', 1, 0);
+                              if (parsed.length === 0) return;
+                              // eslint-disable-next-line @typescript-eslint/no-unused-vars
+                              const cleaned = parsed.map(({ blankNumber, ...rest }) => rest);
+                              setEditForm({ ...editForm, choices: cleaned });
+                              setQuickPaste(p => ({ ...p, [0]: '' }));
+                              pushToast(`Imported ${cleaned.length} choices`);
+                            }}
+                          >
+                            Import
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </>
                 )}
               </div>

@@ -39,3 +39,6 @@ Thumbs.db
 # Uploads
 public/uploads/
 .vercel
+
+# Local DB backups — never commit
+backups/
