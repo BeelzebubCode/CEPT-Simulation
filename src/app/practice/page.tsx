@@ -410,32 +410,40 @@ export default function PracticePage() {
         </div>
       </div>
 
-      <main className="main-content" onClick={() => setShowSectionSelector(false)}>
+      <main className={`main-content${isComprehension ? ' main-content-wide' : ''}`} onClick={() => setShowSectionSelector(false)}>
         {isComprehension && currentGroup ? (
           /* ─── READING COMPREHENSION: SPLIT-SCREEN PASSAGE + DROPDOWNS ─── */
           <div key={`sentence-${qIdx}`} style={{
             display: 'grid',
-            gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)',
-            gap: 16,
+            gridTemplateColumns: '1.1fr 1fr',
+            gap: 24,
             alignItems: 'start',
           }} className="reading-comprehension-grid">
 
             {/* LEFT — passage */}
             <div style={{
-              background: '#fff', borderRadius: 12, padding: '20px 24px',
-              boxShadow: '0 1px 4px rgba(0,0,0,0.07)', position: 'sticky', top: 72,
+              background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+              borderRadius: 16, padding: '28px 28px',
+              boxShadow: '0 2px 12px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)',
+              position: 'sticky', top: 72,
               maxHeight: 'calc(100vh - 140px)', overflowY: 'auto',
+              border: '1px solid #e2e8f0',
             }}>
-              <div style={{ fontWeight: 700, fontSize: 16, color: '#1e293b', marginBottom: 12 }}>
-                Passage {qIdx + 1}
+              <div style={{
+                display: 'inline-flex', alignItems: 'center', gap: 8,
+                fontWeight: 700, fontSize: 13, color: '#1565c0',
+                background: '#e3f2fd', padding: '5px 14px', borderRadius: 20,
+                marginBottom: 16, letterSpacing: '0.3px',
+              }}>
+                📖 Passage {qIdx + 1}
               </div>
-              <div style={{ fontSize: 15, lineHeight: 1.85, color: '#334155', whiteSpace: 'pre-line' }}>
+              <div style={{ fontSize: 15, lineHeight: 2, color: '#334155', whiteSpace: 'pre-line' }}>
                 {currentGroup.passage}
               </div>
             </div>
 
             {/* RIGHT — questions as dropdowns */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {currentGroup.questions.map((q, qi) => {
                 const selected = answers[q.id];
                 const selectedChoice = q.choices.find(c => c.id === selected);
@@ -447,19 +455,21 @@ export default function PracticePage() {
                   <div key={q.id} style={{
                     background: '#fff',
                     border: `2px solid ${!isAns ? '#e2e8f0' : isCorrect ? '#16a34a' : '#dc2626'}`,
-                    borderRadius: 10,
-                    padding: '14px 16px',
-                    transition: 'border-color 0.2s',
+                    borderRadius: 14,
+                    padding: '16px 18px',
+                    transition: 'all 0.25s ease',
+                    boxShadow: isAns ? (isCorrect ? '0 2px 8px rgba(22,163,74,0.12)' : '0 2px 8px rgba(220,38,38,0.12)') : '0 1px 4px rgba(0,0,0,0.04)',
                   }}>
                     {/* Question number + text */}
-                    <div style={{ display: 'flex', gap: 8, marginBottom: 10, alignItems: 'flex-start' }}>
+                    <div style={{ display: 'flex', gap: 10, marginBottom: 12, alignItems: 'flex-start' }}>
                       <span style={{
-                        flexShrink: 0, width: 24, height: 24,
-                        borderRadius: 6, background: 'var(--accent)',
-                        color: '#fff', fontSize: 12, fontWeight: 700,
+                        flexShrink: 0, width: 28, height: 28,
+                        borderRadius: 8, background: isAns ? (isCorrect ? '#16a34a' : '#dc2626') : 'var(--accent)',
+                        color: '#fff', fontSize: 13, fontWeight: 700,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        transition: 'background 0.2s',
                       }}>{qi + 1}</span>
-                      <span style={{ fontSize: 14, fontWeight: 600, color: '#1e293b', lineHeight: 1.5 }}>
+                      <span style={{ fontSize: 14, fontWeight: 600, color: '#1e293b', lineHeight: 1.6 }}>
                         {q.text}
                       </span>
                     </div>
@@ -470,11 +480,12 @@ export default function PracticePage() {
                         value=""
                         onChange={e => { if (e.target.value) selectAnswer(e.target.value, q.id); }}
                         style={{
-                          width: '100%', padding: '9px 12px',
-                          border: '1.5px solid #cbd5e1', borderRadius: 8,
+                          width: '100%', padding: '10px 14px',
+                          border: '1.5px solid #cbd5e1', borderRadius: 10,
                           fontSize: 14, color: '#475569',
                           background: '#f8fafc', cursor: 'pointer',
                           fontFamily: 'inherit', appearance: 'auto',
+                          transition: 'border-color 0.2s',
                         }}
                       >
                         <option value="">— เลือกคำตอบ —</option>
@@ -484,16 +495,16 @@ export default function PracticePage() {
                       </select>
                     ) : (
                       <div style={{
-                        display: 'flex', alignItems: 'center', gap: 8,
-                        padding: '9px 12px', borderRadius: 8,
-                        background: isCorrect ? '#dcfce7' : '#fee2e2',
+                        display: 'flex', alignItems: 'center', gap: 10,
+                        padding: '10px 14px', borderRadius: 10,
+                        background: isCorrect ? 'linear-gradient(135deg, #dcfce7, #bbf7d0)' : 'linear-gradient(135deg, #fee2e2, #fecaca)',
                         fontSize: 14, fontWeight: 600,
                         color: isCorrect ? '#15803d' : '#dc2626',
                       }}>
-                        <span>{isCorrect ? '✓' : '✗'}</span>
+                        <span style={{ fontSize: 16 }}>{isCorrect ? '✓' : '✗'}</span>
                         <span>{selectedChoice?.label}. {selectedChoice?.text}</span>
                         {!isCorrect && correctChoice && (
-                          <span style={{ marginLeft: 'auto', color: '#15803d', fontSize: 13 }}>
+                          <span style={{ marginLeft: 'auto', color: '#15803d', fontSize: 13, fontWeight: 500 }}>
                             ✓ {correctChoice.label}. {correctChoice.text}
                           </span>
                         )}
@@ -504,18 +515,49 @@ export default function PracticePage() {
               })}
 
               {/* Score summary */}
-              {isQuestionAnswered && (
-                <div style={{
-                  padding: 16, borderRadius: 10, background: '#e8f5e9',
-                  display: 'flex', alignItems: 'center', gap: 10,
-                }}>
-                  <CheckCircle size={20} color="#2e7d32" />
-                  <span style={{ fontWeight: 600, color: '#1b5e20' }}>
-                    {currentGroup.questions.filter(q => answers[q.id] === q.choices.find(c => c.isCorrect)?.id).length}
-                    {' / '}{currentGroup.questions.length} correct
-                  </span>
-                </div>
-              )}
+              {isQuestionAnswered && (() => {
+                const correctCount = currentGroup.questions.filter(q => answers[q.id] === q.choices.find(c => c.isCorrect)?.id).length;
+                const totalCount = currentGroup.questions.length;
+                const pct = Math.round((correctCount / totalCount) * 100);
+                const isAllCorrect = correctCount === totalCount;
+                return (
+                  <div style={{
+                    padding: '20px 22px', borderRadius: 16,
+                    background: isAllCorrect
+                      ? 'linear-gradient(135deg, #dcfce7 0%, #bbf7d0 50%, #86efac 100%)'
+                      : 'linear-gradient(135deg, #e0f2fe 0%, #bae6fd 50%, #7dd3fc 100%)',
+                    display: 'flex', alignItems: 'center', gap: 16,
+                    border: `1px solid ${isAllCorrect ? '#86efac' : '#7dd3fc'}`,
+                    boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
+                  }}>
+                    {/* Circular progress */}
+                    <div style={{ position: 'relative', width: 52, height: 52, flexShrink: 0 }}>
+                      <svg viewBox="0 0 36 36" style={{ width: 52, height: 52, transform: 'rotate(-90deg)' }}>
+                        <circle cx="18" cy="18" r="15" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="3" />
+                        <circle cx="18" cy="18" r="15" fill="none"
+                          stroke={isAllCorrect ? '#16a34a' : '#0284c7'}
+                          strokeWidth="3" strokeLinecap="round"
+                          strokeDasharray={`${pct * 0.94} 100`}
+                          style={{ transition: 'stroke-dasharray 0.8s ease' }}
+                        />
+                      </svg>
+                      <span style={{
+                        position: 'absolute', inset: 0,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: 13, fontWeight: 800, color: isAllCorrect ? '#15803d' : '#0369a1',
+                      }}>{pct}%</span>
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 16, color: isAllCorrect ? '#15803d' : '#0369a1' }}>
+                        {isAllCorrect ? '🎉 Perfect Score!' : `${correctCount} / ${totalCount} Correct`}
+                      </div>
+                      <div style={{ fontSize: 13, color: isAllCorrect ? '#166534' : '#075985', marginTop: 2 }}>
+                        {isAllCorrect ? 'You answered every question correctly.' : 'Review the passage to understand the correct answers.'}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           </div>
         ) : question ? (

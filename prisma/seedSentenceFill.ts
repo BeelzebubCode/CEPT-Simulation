@@ -1,3 +1,4 @@
+// @ts-nocheck — standalone seed script, not part of Next.js app
 import { PrismaClient } from '@prisma/client';
 import 'dotenv/config';
 import { readingSentenceQuestions } from './data/readingSentence';
