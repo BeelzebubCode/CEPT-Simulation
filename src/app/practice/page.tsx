@@ -145,11 +145,10 @@ export default function PracticePage() {
   const secSummary = sectionList[secIdx];
   const sec = secSummary ? loadedSections[secSummary.id] : undefined;
   const isComprehension = sec?.type === 'READING_COMPREHENSION';
-  const isReadingSentence = sec?.type === 'READING_SENTENCE';
 
-  // Group questions by passage for Reading Comprehension and Reading Sentence
+  // Group questions by passage for Reading Comprehension
   const passageGroups = (() => {
-    if (!sec || (!isComprehension && !isReadingSentence)) return null;
+    if (!sec || !isComprehension) return null;
     const groups: { passage: string; questions: Question[] }[] = [];
     const seen = new Map<string, number>();
     for (const q of sec.questions) {
@@ -164,10 +163,10 @@ export default function PracticePage() {
     return groups;
   })();
 
-  // For comprehension/sentence: qIdx indexes passage groups; for others: indexes questions
-  const totalQ = (isComprehension || isReadingSentence) && passageGroups ? passageGroups.length : (sec?.questions.length || 0);
-  const question = (isComprehension || isReadingSentence) ? null : sec?.questions[qIdx];
-  const currentGroup = (isComprehension || isReadingSentence) && passageGroups ? passageGroups[qIdx] : null;
+  // For comprehension: qIdx indexes passage groups; for others: indexes questions
+  const totalQ = isComprehension && passageGroups ? passageGroups.length : (sec?.questions.length || 0);
+  const question = isComprehension ? null : sec?.questions[qIdx];
+  const currentGroup = isComprehension && passageGroups ? passageGroups[qIdx] : null;
 
   const selectAnswer = useCallback((choiceId: string, questionId?: string) => {
     const qId = questionId || question?.id;
@@ -226,10 +225,10 @@ export default function PracticePage() {
 
   const isListening = sec.type === 'LISTENING_TEXT' || sec.type === 'LISTENING_IMAGE';
   const isFillBlank = sec.type === 'READING_FILL_BLANK';
-  const answeredCount = (isComprehension || isReadingSentence) && passageGroups
+  const answeredCount = isComprehension && passageGroups
     ? passageGroups.filter(g => g.questions.every(q => answers[q.id])).length
     : sec.questions.filter(q => answers[q.id]).length;
-  const isQuestionAnswered = (isComprehension || isReadingSentence) && currentGroup
+  const isQuestionAnswered = isComprehension && currentGroup
     ? currentGroup.questions.every(q => answers[q.id])
     : question ? !!answers[question.id] : false;
 
@@ -334,7 +333,7 @@ export default function PracticePage() {
         <h1 className="section-title">{sec.name}</h1>
         <p className="section-desc">{sec.description}</p>
         <div className="question-dots">
-          {(isComprehension || isReadingSentence) && passageGroups ? (
+          {isComprehension && passageGroups ? (
             /* Passage group dots for Reading Comprehension / Reading Sentence */
             passageGroups.map((g, i) => {
               const allAnswered = g.questions.every(q => answers[q.id]);
@@ -412,14 +411,14 @@ export default function PracticePage() {
       </div>
 
       <main className="main-content" onClick={() => setShowSectionSelector(false)}>
-        {isReadingSentence && currentGroup ? (
-          /* ─── READING SENTENCE: SPLIT-SCREEN PASSAGE + DROPDOWNS ─── */
+        {isComprehension && currentGroup ? (
+          /* ─── READING COMPREHENSION: SPLIT-SCREEN PASSAGE + DROPDOWNS ─── */
           <div key={`sentence-${qIdx}`} style={{
             display: 'grid',
             gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)',
             gap: 16,
             alignItems: 'start',
-          }} className="reading-sentence-grid">
+          }} className="reading-comprehension-grid">
 
             {/* LEFT — passage */}
             <div style={{
@@ -518,84 +517,6 @@ export default function PracticePage() {
                 </div>
               )}
             </div>
-          </div>
-        ) : isComprehension && currentGroup ? (
-          /* ─── READING COMPREHENSION: GROUPED PASSAGE VIEW ─── */
-          <div className="question-card" key={`passage-${qIdx}`}>
-            <div className="question-number">Passage {qIdx + 1}</div>
-
-            {/* Passage text */}
-            <div className="question-passage" style={{ fontSize: 15, lineHeight: 1.8, whiteSpace: 'pre-line', marginBottom: 24 }}>
-              {currentGroup.passage}
-            </div>
-
-            {/* All questions for this passage */}
-            {currentGroup.questions.map((q, qi) => {
-              const isQAnswered = !!answers[q.id];
-              return (
-                <div key={q.id} style={{
-                  padding: '20px 0',
-                  borderTop: qi > 0 ? '1px solid #e0e0e0' : 'none',
-                }}>
-                  <div className="question-text" style={{ fontSize: 16, fontWeight: 600, marginBottom: 12, display: 'flex', gap: 8 }}>
-                    <span style={{ color: 'var(--accent)', fontWeight: 700, flexShrink: 0 }}>{qi + 1}.</span>
-                    <span>{q.text}</span>
-                  </div>
-
-                  <div className="choices" style={{ gap: 8 }}>
-                    {q.choices.map(c => {
-                      const isSelected = answers[q.id] === c.id;
-                      let choiceClass = 'choice-btn';
-                      let badge = null;
-
-                      if (isQAnswered) {
-                        if (c.isCorrect) {
-                          choiceClass += ' review-correct';
-                          badge = <span className="review-badge correct-badge">CORRECT</span>;
-                        } else if (isSelected && !c.isCorrect) {
-                          choiceClass += ' review-wrong';
-                          badge = <span className="review-badge wrong-badge">YOUR ANSWER</span>;
-                        } else {
-                          choiceClass += ' review-disabled';
-                        }
-                      } else if (isSelected) {
-                        choiceClass += ' selected';
-                      }
-
-                      return (
-                        <button key={c.id} className={choiceClass}
-                          onClick={() => selectAnswer(c.id, q.id)}
-                          style={isQAnswered ? { cursor: 'default', opacity: (!c.isCorrect && !isSelected) ? 0.6 : 1 } : {}}>
-                          <span className="choice-letter">{c.label}</span>
-                          <span>{c.text}</span>
-                          {badge}
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  {isQAnswered && (
-                    <div style={{ marginTop: 12, padding: 12, background: '#e3f2fd', borderRadius: 8, color: '#0277bd', display: 'flex', alignItems: 'center', gap: 10, fontSize: 14 }}>
-                      {answers[q.id] === q.choices.find(c => c.isCorrect)?.id ? (
-                        <><CheckCircle size={18} color="#2e7d32" /><span>Correct!</span></>
-                      ) : (
-                        <><XCircle size={18} color="#c62828" /><span>Incorrect. Review the correct answer above.</span></>
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-
-            {/* Overall passage score when all questions answered */}
-            {isQuestionAnswered && (
-              <div style={{ marginTop: 16, padding: 16, background: '#e8f5e9', borderRadius: 10, display: 'flex', alignItems: 'center', gap: 12 }}>
-                <CheckCircle size={22} color="#2e7d32" />
-                <span style={{ fontWeight: 600, color: '#1b5e20' }}>
-                  Passage complete: {currentGroup.questions.filter(q => answers[q.id] === q.choices.find(c => c.isCorrect)?.id).length} / {currentGroup.questions.length} correct
-                </span>
-              </div>
-            )}
           </div>
         ) : question ? (
           /* ─── STANDARD SINGLE QUESTION VIEW ─── */
@@ -744,7 +665,7 @@ export default function PracticePage() {
         <div className="nav-inner">
           <button className="btn btn-secondary" disabled={qIdx === 0} onClick={prevQ}><ChevronLeft size={16} /> Back</button>
           <span className="nav-center">
-            {(isComprehension || isReadingSentence) ? `Passage ${qIdx + 1} / ${totalQ}` : `Q ${qIdx + 1} / ${totalQ}`} ({answeredCount} answered)
+            {isComprehension ? `Passage ${qIdx + 1} / ${totalQ}` : `Q ${qIdx + 1} / ${totalQ}`} ({answeredCount} answered)
           </span>
           <button className="btn btn-primary" disabled={qIdx === totalQ - 1} onClick={nextQ}>Next <ChevronRight size={16} /></button>
         </div>
