@@ -18,6 +18,7 @@ export default function SectionEditor() {
   const [editForm, setEditForm]   = useState<{ text?: string; passage?: string; speechText?: string; imageUrl?: string; choices?: any[] }>({});
   const [saving, setSaving]       = useState(false);
   const [toasts, setToasts]       = useState<Toast[]>([]);
+  const [quickPaste, setQuickPaste] = useState<Record<number, string>>({});
   const [confirmDelQ, setConfirmDelQ] = useState<{ open: boolean; qId: string; qText: string }>({ open: false, qId: '', qText: '' });
 
   const pushToast = (msg: string, ok = true) => {
@@ -82,6 +83,20 @@ export default function SectionEditor() {
     await fetch(`/api/questions/${qId}`, { method: 'DELETE' });
     load();
     pushToast('Question deleted');
+  };
+
+  /** Parse "A. from / B. since ✅ / C. for / D. after" → choices array */
+  const parseChoiceShorthand = (raw: string, blankNumber: number, orderOffset: number) => {
+    return raw.split('/').map((part, i) => {
+      const trimmed = part.trim();
+      const isCorrect = trimmed.includes('✅') || trimmed.includes('*');
+      const cleaned = trimmed.replace(/✅|\*/g, '').trim();
+      // Match "A. text" or just "text"
+      const match = cleaned.match(/^([A-Za-z])\.\s*(.+)$/);
+      const label = match ? match[1].toUpperCase() : String.fromCharCode(65 + i);
+      const text  = match ? match[2].trim() : cleaned;
+      return { label, text, isCorrect, order: orderOffset + i + 1, blankNumber };
+    }).filter(c => c.text.length > 0);
   };
 
   const moveQuestion = async (qi: number, dir: -1 | 1) => {
@@ -292,6 +307,39 @@ export default function SectionEditor() {
                               </div>
                             );
                           })}
+
+                          {/* Quick paste row */}
+                          <div style={{ marginTop: 10, borderTop: '1px solid var(--admin-border)', paddingTop: 10 }}>
+                            <div style={{ fontSize: 11, color: '#64748b', marginBottom: 5 }}>
+                              Quick import — วาง <code style={{ background: '#0f172a', padding: '1px 5px', borderRadius: 3 }}>A. from / B. since ✅ / C. for / D. after</code>
+                            </div>
+                            <div style={{ display: 'flex', gap: 6 }}>
+                              <input
+                                className="admin-input"
+                                style={{ flex: 1, fontSize: 12 }}
+                                placeholder="A. word / B. word ✅ / C. word / D. word"
+                                value={quickPaste[bn] || ''}
+                                onChange={e => setQuickPaste(p => ({ ...p, [bn]: e.target.value }))}
+                                onKeyDown={e => {
+                                  if (e.key === 'Enter') e.currentTarget.nextElementSibling?.dispatchEvent(new MouseEvent('click'));
+                                }}
+                              />
+                              <button
+                                className="admin-btn admin-btn-primary"
+                                style={{ fontSize: 11, padding: '4px 12px', whiteSpace: 'nowrap' }}
+                                disabled={!quickPaste[bn]?.trim()}
+                                onClick={() => {
+                                  const parsed = parseChoiceShorthand(quickPaste[bn] || '', bn, (editForm.choices || []).filter(c => (c.blankNumber || 1) !== bn).length);
+                                  if (parsed.length === 0) return;
+                                  const others = (editForm.choices || []).filter(c => (c.blankNumber || 1) !== bn);
+                                  setEditForm({ ...editForm, choices: [...others, ...parsed] });
+                                  setQuickPaste(p => ({ ...p, [bn]: '' }));
+                                }}
+                              >
+                                Import
+                              </button>
+                            </div>
+                          </div>
                         </div>
                       );
                     })}
