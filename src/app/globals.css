@@ -463,10 +463,19 @@ body {
   /* Reading Comprehension: stack vertically on mobile */
   .reading-comprehension-grid {
     grid-template-columns: 1fr !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+  .reading-comprehension-grid > div {
+    border-right: none !important;
+    max-height: none !important;
+    overflow-y: visible !important;
   }
   .reading-comprehension-grid > div:first-child {
-    position: static !important;
-    max-height: 280px !important;
+    padding: 12px 4px !important;
+    max-height: 250px !important;
+    overflow-y: auto !important;
+    border-bottom: 1px solid #e2e8f0 !important;
   }
   .main-content.main-content-wide { max-width: 100%; padding: 16px 12px 120px; }
 }
