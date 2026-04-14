@@ -458,4 +458,13 @@ body {
 
   /* Passage view on mobile */
   .question-passage { font-size: 13px; line-height: 1.7; padding: 12px 14px; }
+
+  /* Reading Sentence: stack vertically on mobile */
+  .reading-sentence-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .reading-sentence-grid > div:first-child {
+    position: static !important;
+    max-height: 280px !important;
+  }
 }

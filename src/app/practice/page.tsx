@@ -145,10 +145,11 @@ export default function PracticePage() {
   const secSummary = sectionList[secIdx];
   const sec = secSummary ? loadedSections[secSummary.id] : undefined;
   const isComprehension = sec?.type === 'READING_COMPREHENSION';
+  const isReadingSentence = sec?.type === 'READING_SENTENCE';
 
-  // Group questions by passage for Reading Comprehension
+  // Group questions by passage for Reading Comprehension and Reading Sentence
   const passageGroups = (() => {
-    if (!sec || !isComprehension) return null;
+    if (!sec || (!isComprehension && !isReadingSentence)) return null;
     const groups: { passage: string; questions: Question[] }[] = [];
     const seen = new Map<string, number>();
     for (const q of sec.questions) {
@@ -163,10 +164,10 @@ export default function PracticePage() {
     return groups;
   })();
 
-  // For comprehension: qIdx indexes passage groups; for others: indexes questions
-  const totalQ = isComprehension && passageGroups ? passageGroups.length : (sec?.questions.length || 0);
-  const question = isComprehension ? null : sec?.questions[qIdx];
-  const currentGroup = isComprehension && passageGroups ? passageGroups[qIdx] : null;
+  // For comprehension/sentence: qIdx indexes passage groups; for others: indexes questions
+  const totalQ = (isComprehension || isReadingSentence) && passageGroups ? passageGroups.length : (sec?.questions.length || 0);
+  const question = (isComprehension || isReadingSentence) ? null : sec?.questions[qIdx];
+  const currentGroup = (isComprehension || isReadingSentence) && passageGroups ? passageGroups[qIdx] : null;
 
   const selectAnswer = useCallback((choiceId: string, questionId?: string) => {
     const qId = questionId || question?.id;
@@ -225,10 +226,10 @@ export default function PracticePage() {
 
   const isListening = sec.type === 'LISTENING_TEXT' || sec.type === 'LISTENING_IMAGE';
   const isFillBlank = sec.type === 'READING_FILL_BLANK';
-  const answeredCount = isComprehension && passageGroups
+  const answeredCount = (isComprehension || isReadingSentence) && passageGroups
     ? passageGroups.filter(g => g.questions.every(q => answers[q.id])).length
     : sec.questions.filter(q => answers[q.id]).length;
-  const isQuestionAnswered = isComprehension && currentGroup
+  const isQuestionAnswered = (isComprehension || isReadingSentence) && currentGroup
     ? currentGroup.questions.every(q => answers[q.id])
     : question ? !!answers[question.id] : false;
 
@@ -333,8 +334,8 @@ export default function PracticePage() {
         <h1 className="section-title">{sec.name}</h1>
         <p className="section-desc">{sec.description}</p>
         <div className="question-dots">
-          {isComprehension && passageGroups ? (
-            /* Passage group dots for Reading Comprehension */
+          {(isComprehension || isReadingSentence) && passageGroups ? (
+            /* Passage group dots for Reading Comprehension / Reading Sentence */
             passageGroups.map((g, i) => {
               const allAnswered = g.questions.every(q => answers[q.id]);
               const anyAnswered = g.questions.some(q => answers[q.id]);
@@ -411,7 +412,114 @@ export default function PracticePage() {
       </div>
 
       <main className="main-content" onClick={() => setShowSectionSelector(false)}>
-        {isComprehension && currentGroup ? (
+        {isReadingSentence && currentGroup ? (
+          /* ─── READING SENTENCE: SPLIT-SCREEN PASSAGE + DROPDOWNS ─── */
+          <div key={`sentence-${qIdx}`} style={{
+            display: 'grid',
+            gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)',
+            gap: 16,
+            alignItems: 'start',
+          }} className="reading-sentence-grid">
+
+            {/* LEFT — passage */}
+            <div style={{
+              background: '#fff', borderRadius: 12, padding: '20px 24px',
+              boxShadow: '0 1px 4px rgba(0,0,0,0.07)', position: 'sticky', top: 72,
+              maxHeight: 'calc(100vh - 140px)', overflowY: 'auto',
+            }}>
+              <div style={{ fontWeight: 700, fontSize: 16, color: '#1e293b', marginBottom: 12 }}>
+                Passage {qIdx + 1}
+              </div>
+              <div style={{ fontSize: 15, lineHeight: 1.85, color: '#334155', whiteSpace: 'pre-line' }}>
+                {currentGroup.passage}
+              </div>
+            </div>
+
+            {/* RIGHT — questions as dropdowns */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {currentGroup.questions.map((q, qi) => {
+                const selected = answers[q.id];
+                const selectedChoice = q.choices.find(c => c.id === selected);
+                const correctChoice = q.choices.find(c => c.isCorrect);
+                const isAns = !!selected;
+                const isCorrect = isAns && selectedChoice?.isCorrect;
+
+                return (
+                  <div key={q.id} style={{
+                    background: '#fff',
+                    border: `2px solid ${!isAns ? '#e2e8f0' : isCorrect ? '#16a34a' : '#dc2626'}`,
+                    borderRadius: 10,
+                    padding: '14px 16px',
+                    transition: 'border-color 0.2s',
+                  }}>
+                    {/* Question number + text */}
+                    <div style={{ display: 'flex', gap: 8, marginBottom: 10, alignItems: 'flex-start' }}>
+                      <span style={{
+                        flexShrink: 0, width: 24, height: 24,
+                        borderRadius: 6, background: 'var(--accent)',
+                        color: '#fff', fontSize: 12, fontWeight: 700,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}>{qi + 1}</span>
+                      <span style={{ fontSize: 14, fontWeight: 600, color: '#1e293b', lineHeight: 1.5 }}>
+                        {q.text}
+                      </span>
+                    </div>
+
+                    {/* Select dropdown */}
+                    {!isAns ? (
+                      <select
+                        value=""
+                        onChange={e => { if (e.target.value) selectAnswer(e.target.value, q.id); }}
+                        style={{
+                          width: '100%', padding: '9px 12px',
+                          border: '1.5px solid #cbd5e1', borderRadius: 8,
+                          fontSize: 14, color: '#475569',
+                          background: '#f8fafc', cursor: 'pointer',
+                          fontFamily: 'inherit', appearance: 'auto',
+                        }}
+                      >
+                        <option value="">— เลือกคำตอบ —</option>
+                        {q.choices.map(c => (
+                          <option key={c.id} value={c.id}>{c.label}. {c.text}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <div style={{
+                        display: 'flex', alignItems: 'center', gap: 8,
+                        padding: '9px 12px', borderRadius: 8,
+                        background: isCorrect ? '#dcfce7' : '#fee2e2',
+                        fontSize: 14, fontWeight: 600,
+                        color: isCorrect ? '#15803d' : '#dc2626',
+                      }}>
+                        <span>{isCorrect ? '✓' : '✗'}</span>
+                        <span>{selectedChoice?.label}. {selectedChoice?.text}</span>
+                        {!isCorrect && correctChoice && (
+                          <span style={{ marginLeft: 'auto', color: '#15803d', fontSize: 13 }}>
+                            ✓ {correctChoice.label}. {correctChoice.text}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+
+              {/* Score summary */}
+              {isQuestionAnswered && (
+                <div style={{
+                  padding: 16, borderRadius: 10, background: '#e8f5e9',
+                  display: 'flex', alignItems: 'center', gap: 10,
+                }}>
+                  <CheckCircle size={20} color="#2e7d32" />
+                  <span style={{ fontWeight: 600, color: '#1b5e20' }}>
+                    {currentGroup.questions.filter(q => answers[q.id] === q.choices.find(c => c.isCorrect)?.id).length}
+                    {' / '}{currentGroup.questions.length} correct
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        ) : isComprehension && currentGroup ? (
           /* ─── READING COMPREHENSION: GROUPED PASSAGE VIEW ─── */
           <div className="question-card" key={`passage-${qIdx}`}>
             <div className="question-number">Passage {qIdx + 1}</div>
@@ -636,7 +744,7 @@ export default function PracticePage() {
         <div className="nav-inner">
           <button className="btn btn-secondary" disabled={qIdx === 0} onClick={prevQ}><ChevronLeft size={16} /> Back</button>
           <span className="nav-center">
-            {isComprehension ? `Passage ${qIdx + 1} / ${totalQ}` : `Q ${qIdx + 1} / ${totalQ}`} ({answeredCount} answered)
+            {(isComprehension || isReadingSentence) ? `Passage ${qIdx + 1} / ${totalQ}` : `Q ${qIdx + 1} / ${totalQ}`} ({answeredCount} answered)
           </span>
           <button className="btn btn-primary" disabled={qIdx === totalQ - 1} onClick={nextQ}>Next <ChevronRight size={16} /></button>
         </div>
