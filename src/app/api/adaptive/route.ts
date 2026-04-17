@@ -8,15 +8,24 @@ function safeQuestion(q: { choices: { id: string; label: string; text: string; i
   return { ...q, choices: safeChoices };
 }
 
-// Single DB round-trip: fetch candidates and prefer difficulty at app level
+function shuffleArray<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// Fetch candidates, shuffle for randomness, then prefer difficulty at app level
 async function pickQuestion(sectionId: string, excludeIds: string[], preferDifficulty: string) {
   const candidates = await prisma.question.findMany({
     where: { sectionId, id: { notIn: excludeIds } },
     include: { choices: { orderBy: { order: 'asc' } } },
-    orderBy: { order: 'asc' },
-    take: 10,
+    take: 60,
   });
-  return candidates.find(q => q.difficulty === preferDifficulty) ?? candidates[0] ?? null;
+  const shuffled = shuffleArray(candidates);
+  return shuffled.find(q => q.difficulty === preferDifficulty) ?? shuffled[0] ?? null;
 }
 
 export async function POST(req: Request) {
@@ -29,27 +38,22 @@ export async function POST(req: Request) {
     if (action === 'start') {
       const [attempt, firstSection] = await Promise.all([
         prisma.examAttempt.create({ data: { mode: 'exam', ceptScore: 0 } }),
-        prisma.section.findFirst({
-          orderBy: { order: 'asc' },
-          include: {
-            questions: {
-              where: { difficulty: 'MEDIUM' },
-              include: { choices: { orderBy: { order: 'asc' } } },
-              orderBy: { order: 'asc' },
-              take: 1,
-            },
-          },
-        }),
+        prisma.section.findFirst({ orderBy: { order: 'asc' } }),
       ]);
 
-      if (!firstSection || firstSection.questions.length === 0) {
+      if (!firstSection) {
+        return NextResponse.json({ error: 'No sections found' }, { status: 404 });
+      }
+
+      const firstQuestion = await pickQuestion(firstSection.id, [], 'MEDIUM');
+      if (!firstQuestion) {
         return NextResponse.json({ error: 'No questions found' }, { status: 404 });
       }
 
       return NextResponse.json({
         attemptId: attempt.id,
         theta: 0,
-        nextQuestion: safeQuestion(firstSection.questions[0]),
+        nextQuestion: safeQuestion(firstQuestion),
         currentSectionId: firstSection.id,
         currentSectionName: firstSection.name,
         currentSectionType: firstSection.type,
@@ -175,17 +179,21 @@ export async function POST(req: Request) {
       }
 
       let totalScore = 0;
+      let correctCount = 0;
       for (const qId of uniqueQuestions) {
         const qAnswers = answers.filter(a => a.questionId === qId);
         if (qAnswers.length === 1) {
-          totalScore += qAnswers[0].isCorrect ? 1 : 0;
+          const correct = qAnswers[0].isCorrect;
+          totalScore += correct ? 1 : 0;
+          if (correct) correctCount++;
         } else {
           // Fill-blank partial credit: correct_blanks / total_blanks
-          totalScore += qAnswers.filter(a => a.isCorrect).length / qAnswers.length;
+          const numCorrect = qAnswers.filter(a => a.isCorrect).length;
+          totalScore += numCorrect / qAnswers.length;
+          if (numCorrect === qAnswers.length) correctCount++;
         }
       }
 
-      const correctCount = answers.filter(a => a.isCorrect).length;
       const totalItems = uniqueQuestions.size;
       // BUG-1: Normalize score to 0-50 scale based on proportion
       const score = Math.min(50, Math.round((totalScore / totalItems) * 50));
