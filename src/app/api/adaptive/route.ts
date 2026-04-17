@@ -195,8 +195,8 @@ export async function POST(req: Request) {
       }
 
       const totalItems = uniqueQuestions.size;
-      // BUG-1: Normalize score to 0-50 scale based on proportion
-      const score = Math.min(50, Math.round((totalScore / totalItems) * 50));
+      // Score = raw correct count, capped at 50
+      const score = Math.min(50, Math.round(totalScore));
 
       let cefr = 'Below A1';
       if (score >= 45) cefr = 'C2';
