@@ -56,12 +56,12 @@ export const readingSentenceQuestions2 = [
       { label: 'D', text: 'fresh', isCorrect: false },
     ] },
   // 29
-  { text: "I had to creep silently up the stairs so as not to _____ anyone in the house.", difficulty: 'EASY' as const,
+  { text: "I had to creep silently up the stairs so _____ not to wake anyone in the house.", difficulty: 'EASY' as const,
     choices: [
-      { label: 'A', text: 'wake', isCorrect: true },
-      { label: 'B', text: 'disturb', isCorrect: false },
-      { label: 'C', text: 'alert', isCorrect: false },
-      { label: 'D', text: 'alarm', isCorrect: false },
+      { label: 'A', text: 'as', isCorrect: true },
+      { label: 'B', text: 'that', isCorrect: false },
+      { label: 'C', text: 'much', isCorrect: false },
+      { label: 'D', text: 'far', isCorrect: false },
     ] },
   // 30
   { text: "I really enjoy stories that are _____ in the distant future.", difficulty: 'MEDIUM' as const,
@@ -384,12 +384,12 @@ export const readingSentenceQuestions2 = [
       { label: 'D', text: 'harsh', isCorrect: false },
     ] },
   // 70
-  { text: "The boss tends to turn a blind _____ to staff occasionally being late.", difficulty: 'MEDIUM' as const,
+  { text: "The boss tends to _____ a blind eye to staff occasionally being late.", difficulty: 'MEDIUM' as const,
     choices: [
-      { label: 'A', text: 'eye', isCorrect: true },
-      { label: 'B', text: 'look', isCorrect: false },
-      { label: 'C', text: 'view', isCorrect: false },
-      { label: 'D', text: 'sight', isCorrect: false },
+      { label: 'A', text: 'turn', isCorrect: true },
+      { label: 'B', text: 'give', isCorrect: false },
+      { label: 'C', text: 'show', isCorrect: false },
+      { label: 'D', text: 'keep', isCorrect: false },
     ] },
   // 71
   { text: "The company _____ even in its first year and made a small profit the following year.", difficulty: 'HARD' as const,

@@ -172,9 +172,68 @@ export default function SectionEditor() {
     );
   }
 
-  const isListening = section.type === 'LISTENING_TEXT' || section.type === 'LISTENING_IMAGE';
-  const isFillBlank = section.type === 'READING_FILL_BLANK';
-  const badge       = TYPE_BADGE[section.type] ?? { label: section.type, cls: '' };
+  const isListening     = section.type === 'LISTENING_TEXT' || section.type === 'LISTENING_IMAGE' || section.type === 'LISTENING_LONG';
+  const isListeningLong = section.type === 'LISTENING_LONG';
+  const isFillBlank     = section.type === 'READING_FILL_BLANK';
+  const badge           = TYPE_BADGE[section.type] ?? { label: section.type, cls: '' };
+
+  // For LISTENING_LONG: group questions by speechText
+  const audioGroups = isListeningLong ? (() => {
+    const groups: { speechText: string; passage: string; questions: Question[] }[] = [];
+    const seen = new Map<string, number>();
+    for (const q of section.questions) {
+      const key = q.speechText || '';
+      if (seen.has(key)) {
+        groups[seen.get(key)!].questions.push(q);
+      } else {
+        seen.set(key, groups.length);
+        groups.push({ speechText: key, passage: q.passage || '', questions: [q] });
+      }
+    }
+    return groups;
+  })() : null;
+
+  const addAudioGroup = async () => {
+    await fetch('/api/questions', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sectionId: id,
+        text: 'New question',
+        speechText: 'Enter audio transcript here...',
+        passage: 'You will hear...',
+        order: section.questions.length + 1,
+        choices: [
+          { label: 'A', text: 'Option A', isCorrect: true,  order: 1 },
+          { label: 'B', text: 'Option B', isCorrect: false, order: 2 },
+          { label: 'C', text: 'Option C', isCorrect: false, order: 3 },
+          { label: 'D', text: 'Option D', isCorrect: false, order: 4 },
+        ],
+      }),
+    });
+    load();
+    pushToast('New audio group added');
+  };
+
+  const addQuestionToGroup = async (speechText: string, passage: string) => {
+    await fetch('/api/questions', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sectionId: id,
+        text: 'New question',
+        speechText,
+        passage,
+        order: section.questions.length + 1,
+        choices: [
+          { label: 'A', text: 'Option A', isCorrect: true,  order: 1 },
+          { label: 'B', text: 'Option B', isCorrect: false, order: 2 },
+          { label: 'C', text: 'Option C', isCorrect: false, order: 3 },
+          { label: 'D', text: 'Option D', isCorrect: false, order: 4 },
+        ],
+      }),
+    });
+    load();
+    pushToast('Question added to group');
+  };
 
   return (
     <>
@@ -214,12 +273,76 @@ export default function SectionEditor() {
         <h2 style={{ color: '#e2e8f0', fontSize: 15, fontWeight: 700 }}>
           Questions <span style={{ color: '#475569', fontWeight: 400 }}>({section.questions.length})</span>
         </h2>
-        <button className="admin-btn admin-btn-primary" style={{ fontSize: 12 }} onClick={addQuestion}>
-          <Plus size={13} /> Add Question
-        </button>
+        {isListeningLong ? (
+          <button className="admin-btn admin-btn-primary" style={{ fontSize: 12 }} onClick={addAudioGroup}>
+            <Plus size={13} /> New Audio Group
+          </button>
+        ) : (
+          <button className="admin-btn admin-btn-primary" style={{ fontSize: 12 }} onClick={addQuestion}>
+            <Plus size={13} /> Add Question
+          </button>
+        )}
       </div>
 
-      {section.questions.map((q, qi) => (
+      {/* ── LISTENING LONG: grouped by audio ── */}
+      {isListeningLong && audioGroups && audioGroups.map((grp, gi) => (
+        <div key={gi} className="admin-card" style={{ marginBottom: 16, border: '1px solid rgba(239,68,68,0.25)', padding: 0, overflow: 'hidden' }}>
+          {/* Group header */}
+          <div style={{ padding: '12px 16px', background: 'rgba(239,68,68,0.08)', borderBottom: '1px solid rgba(239,68,68,0.15)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                <span className="admin-badge badge-listening-long">🎧 Audio Group {gi + 1}</span>
+                <span style={{ fontSize: 12, color: '#64748b' }}>{grp.questions.length} question{grp.questions.length !== 1 ? 's' : ''}</span>
+              </div>
+              {grp.passage && (
+                <div style={{ fontSize: 12, color: '#94a3b8', fontStyle: 'italic', marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {grp.passage}
+                </div>
+              )}
+              <div style={{ fontSize: 12, color: '#cbd5e1', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {grp.speechText ? `"${grp.speechText.substring(0, 80)}${grp.speechText.length > 80 ? '…' : ''}"` : <span style={{ color: '#475569' }}>No audio transcript</span>}
+              </div>
+            </div>
+            <button className="admin-btn admin-btn-primary" style={{ fontSize: 11, padding: '5px 10px', flexShrink: 0 }}
+              onClick={() => addQuestionToGroup(grp.speechText, grp.passage)}>
+              <Plus size={11} /> Add Q
+            </button>
+          </div>
+          {/* Questions in this group */}
+          <div style={{ padding: '8px 12px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {grp.questions.map((q, qi) => {
+              const allQs = section.questions;
+              const globalQi = allQs.findIndex(x => x.id === q.id);
+              return (
+                <div key={q.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', background: 'rgba(30,41,59,0.5)', borderRadius: 8 }}>
+                  <span style={{ fontSize: 12, color: '#64748b', fontWeight: 600, minWidth: 20 }}>{qi + 1}.</span>
+                  <span style={{ flex: 1, fontSize: 13, color: '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{q.text}</span>
+                  <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+                    <button className="admin-btn admin-btn-ghost" style={{ fontSize: 11, padding: '4px 10px' }} onClick={() => startEdit(q)}>
+                      <Pencil size={11} /> Edit
+                    </button>
+                    <button className="admin-btn admin-btn-danger" style={{ fontSize: 11, padding: '4px 8px' }}
+                      onClick={() => setConfirmDelQ({ open: true, qId: q.id, qText: q.text })}>
+                      <Trash2 size={11} />
+                    </button>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                      <button className="admin-btn admin-btn-ghost" disabled={globalQi === 0}
+                        style={{ fontSize: 10, padding: '2px 5px', opacity: globalQi === 0 ? 0.3 : 1 }}
+                        onClick={() => moveQuestion(globalQi, -1)}><ChevronUp size={10} /></button>
+                      <button className="admin-btn admin-btn-ghost" disabled={globalQi === allQs.length - 1}
+                        style={{ fontSize: 10, padding: '2px 5px', opacity: globalQi === allQs.length - 1 ? 0.3 : 1 }}
+                        onClick={() => moveQuestion(globalQi, 1)}><ChevronDown size={10} /></button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+
+      {/* ── STANDARD flat list ── */}
+      {!isListeningLong && section.questions.map((q, qi) => (
         <div key={q.id} className="admin-card" style={{
           borderLeft: editQ === q.id ? '3px solid #3b82f6' : '3px solid transparent',
           transition: 'border-color 0.15s',

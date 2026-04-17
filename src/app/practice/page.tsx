@@ -147,28 +147,30 @@ export default function PracticePage() {
   const secSummary = sectionList[secIdx];
   const sec = secSummary ? loadedSections[secSummary.id] : undefined;
   const isComprehension = sec?.type === 'READING_COMPREHENSION';
+  const isListeningLong = sec?.type === 'LISTENING_LONG';
+  const isGrouped = isComprehension || isListeningLong;
 
-  // Group questions by passage for Reading Comprehension
+  // Group questions by passage (comprehension) or speechText (listening long)
   const passageGroups = (() => {
-    if (!sec || !isComprehension) return null;
-    const groups: { passage: string; questions: Question[] }[] = [];
+    if (!sec || !isGrouped) return null;
+    const groups: { passage: string; speechText: string; questions: Question[] }[] = [];
     const seen = new Map<string, number>();
     for (const q of sec.questions) {
-      const p = q.passage || '';
-      if (seen.has(p)) {
-        groups[seen.get(p)!].questions.push(q);
+      const key = isListeningLong ? (q.speechText || '') : (q.passage || '');
+      if (seen.has(key)) {
+        groups[seen.get(key)!].questions.push(q);
       } else {
-        seen.set(p, groups.length);
-        groups.push({ passage: p, questions: [q] });
+        seen.set(key, groups.length);
+        groups.push({ passage: q.passage || '', speechText: q.speechText || '', questions: [q] });
       }
     }
     return groups;
   })();
 
-  // For comprehension: qIdx indexes passage groups; for others: indexes questions
-  const totalQ = isComprehension && passageGroups ? passageGroups.length : (sec?.questions.length || 0);
-  const question = isComprehension ? null : sec?.questions[qIdx];
-  const currentGroup = isComprehension && passageGroups ? passageGroups[qIdx] : null;
+  // For grouped sections: qIdx indexes groups; for others: indexes questions
+  const totalQ = isGrouped && passageGroups ? passageGroups.length : (sec?.questions.length || 0);
+  const question = isGrouped ? null : sec?.questions[qIdx];
+  const currentGroup = isGrouped && passageGroups ? passageGroups[qIdx] : null;
 
   const selectAnswer = useCallback((choiceId: string, questionId?: string) => {
     const qId = questionId || question?.id;
@@ -227,10 +229,10 @@ export default function PracticePage() {
 
   const isListening = sec.type === 'LISTENING_TEXT' || sec.type === 'LISTENING_IMAGE';
   const isFillBlank = sec.type === 'READING_FILL_BLANK';
-  const answeredCount = isComprehension && passageGroups
+  const answeredCount = isGrouped && passageGroups
     ? passageGroups.filter(g => g.questions.every(q => answers[q.id])).length
     : sec.questions.filter(q => answers[q.id]).length;
-  const isQuestionAnswered = isComprehension && currentGroup
+  const isQuestionAnswered = isGrouped && currentGroup
     ? currentGroup.questions.every(q => answers[q.id])
     : question ? !!answers[question.id] : false;
 
@@ -335,8 +337,8 @@ export default function PracticePage() {
         <h1 className="section-title">{sec.name}</h1>
         <p className="section-desc">{sec.description}</p>
         <div className="question-dots">
-          {isComprehension && passageGroups ? (
-            /* Passage group dots for Reading Comprehension / Reading Sentence */
+          {isGrouped && passageGroups ? (
+            /* Group dots for Reading Comprehension / Listening Long */
             passageGroups.map((g, i) => {
               const allAnswered = g.questions.every(q => answers[q.id]);
               const anyAnswered = g.questions.some(q => answers[q.id]);
@@ -412,15 +414,42 @@ export default function PracticePage() {
         </div>
       </div>
 
-      <main className={`main-content${isComprehension ? ' main-content-wide' : ''}`} onClick={() => setShowSectionSelector(false)}>
-        {isComprehension && currentGroup ? (
-          /* ─── READING COMPREHENSION: VIEWPORT-LOCKED DUAL PANEL ─── */
-          <div key={`sentence-${qIdx}`} className="reading-comprehension-grid">
+      <main className={`main-content${isGrouped ? ' main-content-wide' : ''}`} onClick={() => setShowSectionSelector(false)}>
+        {isGrouped && currentGroup ? (
+          /* ─── GROUPED VIEW: READING COMPREHENSION / LISTENING LONG ─── */
+          <div key={`group-${qIdx}`} className="reading-comprehension-grid">
 
-            {/* LEFT — passage */}
+            {/* LEFT — passage or audio */}
             <div className="rc-panel rc-passage">
-              <div className="rc-passage-badge">📖 Passage {qIdx + 1}</div>
-              <div className="rc-passage-text">{currentGroup.passage}</div>
+              {isListeningLong ? (
+                <>
+                  <div className="rc-passage-badge">🎧 Audio {qIdx + 1}</div>
+                  {currentGroup.passage && (
+                    <div style={{ fontSize: 14, color: '#475569', marginBottom: 16, lineHeight: 1.65, fontStyle: 'italic' }}>
+                      {currentGroup.passage}
+                    </div>
+                  )}
+                  {currentGroup.speechText ? (
+                    <button className={`tts-btn${speaking ? ' speaking' : ''}`}
+                      onClick={() => speaking ? stopSpeaking() : speak(currentGroup.speechText)}>
+                      {speaking ? <><VolumeX size={16} /> Stop Audio</> : <><Volume2 size={16} /> Play Audio</>}
+                    </button>
+                  ) : (
+                    <div style={{ color: '#94a3b8', fontSize: 13 }}>No audio configured yet.</div>
+                  )}
+                  {isQuestionAnswered && currentGroup.speechText && (
+                    <div style={{ marginTop: 16, borderTop: '1px solid #e2e8f0', paddingTop: 14 }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1 }}>Transcript</div>
+                      <div style={{ fontSize: 13, color: '#475569', lineHeight: 1.7, fontStyle: 'italic' }}>"{currentGroup.speechText}"</div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  <div className="rc-passage-badge">📖 Passage {qIdx + 1}</div>
+                  <div className="rc-passage-text">{currentGroup.passage}</div>
+                </>
+              )}
             </div>
 
             {/* RIGHT — questions */}
@@ -635,7 +664,7 @@ export default function PracticePage() {
         <div className="nav-inner">
           <button className="btn btn-secondary" disabled={qIdx === 0} onClick={prevQ}><ChevronLeft size={16} /> Back</button>
           <span className="nav-center">
-            {isComprehension ? `Passage ${qIdx + 1} / ${totalQ}` : `Q ${qIdx + 1} / ${totalQ}`} ({answeredCount} answered)
+            {isGrouped ? `${isListeningLong ? 'Audio' : 'Passage'} ${qIdx + 1} / ${totalQ}` : `Q ${qIdx + 1} / ${totalQ}`} ({answeredCount} answered)
           </span>
           <button className="btn btn-primary" disabled={qIdx === totalQ - 1} onClick={nextQ}>Next <ChevronRight size={16} /></button>
         </div>

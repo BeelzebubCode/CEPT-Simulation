@@ -188,7 +188,7 @@ export default function AdaptiveExamPage() {
   if (loading && !question) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', fontSize: 18, color: '#666' }}>Initializing Exam...</div>;
   if (!question) return <div style={{ padding: 40, textAlign: 'center' }}>No exam data found.</div>;
 
-  const isListening = currentSectionType === 'LISTENING_TEXT' || currentSectionType === 'LISTENING_IMAGE';
+  const isListening = currentSectionType === 'LISTENING_TEXT' || currentSectionType === 'LISTENING_IMAGE' || currentSectionType === 'LISTENING_LONG';
   const isFillBlank = currentSectionType === 'READING_FILL_BLANK';
   const hasMultipleBlanks = isFillBlank && new Set(question.choices.map(c => c.blankNumber || 1)).size > 1;
 

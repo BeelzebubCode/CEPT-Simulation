@@ -86,7 +86,7 @@ export const readingSentenceQuestions = [
   { text: "Given the remote location of the house you'll be working on, I hope you'll _____ the problems involved in.", difficulty: 'HARD' as const,
     choices: [
       { label: 'A', text: 'assume', isCorrect: true },
-      { label: 'B', text: 'suppose', isCorrect: false },
+      { label: 'B', text: 'suppose', isCorrect: true },
       { label: 'C', text: 'expect', isCorrect: false },
       { label: 'D', text: 'predict', isCorrect: false },
     ] },

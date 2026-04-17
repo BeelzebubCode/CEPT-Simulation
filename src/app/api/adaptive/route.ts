@@ -35,6 +35,7 @@ export async function POST(req: Request) {
     const SECTION_LIMITS: Record<string, number> = {
       READING_FILL_BLANK: 5,
       READING_COMPREHENSION: 5,
+      LISTENING_LONG: 5,
     };
     const DEFAULT_MAX = 10;
     const getMax = (type: string) => SECTION_LIMITS[type] ?? DEFAULT_MAX;
