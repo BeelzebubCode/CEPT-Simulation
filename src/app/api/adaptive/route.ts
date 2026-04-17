@@ -32,7 +32,12 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const { action, attemptId, questionId, choiceId, answeredIds = [], currentSectionId, sectionQCount = 0 } = body;
-    const MAX_PER_SECTION = 10;
+    const SECTION_LIMITS: Record<string, number> = {
+      READING_FILL_BLANK: 5,
+      READING_COMPREHENSION: 5,
+    };
+    const DEFAULT_MAX = 10;
+    const getMax = (type: string) => SECTION_LIMITS[type] ?? DEFAULT_MAX;
 
     // ─── START ───────────────────────────────────────────────────────────────
     if (action === 'start') {
@@ -100,7 +105,7 @@ export async function POST(req: Request) {
       // Save answers exactly once — reuse the same Promise in both branches
       const savePromise = prisma.answer.createMany({ data: answerData });
 
-      if (sectionQCount < MAX_PER_SECTION) {
+      if (sectionQCount < getMax(currentSection?.type ?? '')) {
         // Batch 2 — parallel: save + pick next in same section
         const [, nextQ] = await Promise.all([
           savePromise,
