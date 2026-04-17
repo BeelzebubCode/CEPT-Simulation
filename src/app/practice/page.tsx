@@ -1,18 +1,44 @@
 'use client';
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Volume2, VolumeX, Image, ChevronLeft, ChevronRight, CheckCircle, XCircle, Sparkles, Loader2 } from 'lucide-react';
+import { Volume2, VolumeX, Image, ChevronLeft, ChevronRight, CheckCircle, XCircle, Sparkles, Loader2, Shuffle } from 'lucide-react';
 
 interface Choice { id: string; label: string; text: string; imageUrl?: string; isCorrect: boolean; order: number; blankNumber?: number; }
 interface Question { id: string; text: string; passage?: string; speechText?: string; imageUrl?: string; order: number; choices: Choice[]; }
 interface Section { id: string; name: string; description?: string; type: string; timeLimit: number; order: number; questions: Question[]; }
 interface SectionSummary { id: string; name: string; description?: string; type: string; timeLimit: number; order: number; _count: { questions: number }; }
 
-function FillBlankPassage({ question, blankAnswers, submitted, onBlankChange }: {
+const LABELS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+
+/** Fisher-Yates shuffle (returns new array) */
+function shuffleArray<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/** Get shuffled choices for a question, relabeling A/B/C/D */
+function getShuffledChoices(choices: Choice[], shuffleMap: Record<string, string[]>, questionId: string, blankNum?: number): Choice[] {
+  const key = blankNum != null ? `${questionId}_b${blankNum}` : questionId;
+  const order = shuffleMap[key];
+  if (!order) return choices;
+  const idToChoice = new Map(choices.map(c => [c.id, c]));
+  return order.map((id, i) => {
+    const orig = idToChoice.get(id);
+    if (!orig) return orig!;
+    return { ...orig, label: LABELS[i] || orig.label };
+  }).filter(Boolean);
+}
+
+function FillBlankPassage({ question, blankAnswers, submitted, onBlankChange, shuffleChoices }: {
   question: Question;
   blankAnswers: Record<number, string>;
   submitted: boolean;
   onBlankChange: (blankNum: number, choiceId: string) => void;
+  shuffleChoices?: (choices: Choice[], questionId: string, blankNum?: number) => Choice[];
 }) {
   if (!question.passage) return null;
   const blankNums = [...new Set(question.choices.map(c => c.blankNumber || 1))].sort((a, b) => a - b);
@@ -70,7 +96,7 @@ function FillBlankPassage({ question, blankAnswers, submitted, onBlankChange }: 
               }}
             >
               <option value="">({blankNum})</option>
-              {choices.map(c => (
+              {(shuffleChoices ? shuffleChoices(choices, question.id, blankNum) : choices).map(c => (
                 <option key={c.id} value={c.id}>{c.label}. {c.text}</option>
               ))}
             </select>
@@ -99,6 +125,8 @@ export default function PracticePage() {
   const [sectionLoading, setSectionLoading] = useState(false);
   const [speaking, setSpeaking] = useState(false);
   const [showSectionSelector, setShowSectionSelector] = useState(false);
+  const [shuffled, setShuffled] = useState(false);
+  const [shuffleMap, setShuffleMap] = useState<Record<string, string[]>>({});
 
   // Fetch section list on mount
   useEffect(() => {
@@ -149,6 +177,42 @@ export default function PracticePage() {
   const isComprehension = sec?.type === 'READING_COMPREHENSION';
   const isListeningLong = sec?.type === 'LISTENING_LONG';
   const isGrouped = isComprehension || isListeningLong;
+
+  // Build shuffle map when toggled on or when section changes
+  const buildShuffleMap = useCallback(() => {
+    if (!sec) return;
+    const newMap: Record<string, string[]> = {};
+    for (const q of sec.questions) {
+      // Group choices by blankNumber for fill-blank
+      const blankNums = [...new Set(q.choices.map(c => c.blankNumber || 1))];
+      if (blankNums.length > 1 || (blankNums.length === 1 && blankNums[0] !== 1)) {
+        // Fill-blank: shuffle per blank
+        for (const bn of blankNums) {
+          const blankChoices = q.choices.filter(c => (c.blankNumber || 1) === bn);
+          newMap[`${q.id}_b${bn}`] = shuffleArray(blankChoices.map(c => c.id));
+        }
+      }
+      // Standard: shuffle all choices
+      newMap[q.id] = shuffleArray(q.choices.map(c => c.id));
+    }
+    setShuffleMap(newMap);
+  }, [sec]);
+
+  const toggleShuffle = useCallback(() => {
+    if (!shuffled) {
+      buildShuffleMap();
+      setShuffled(true);
+    } else {
+      setShuffled(false);
+      setShuffleMap({});
+    }
+  }, [shuffled, buildShuffleMap]);
+
+  /** Helper: get display choices (shuffled or original) */
+  const displayChoices = useCallback((choices: Choice[], questionId: string, blankNum?: number): Choice[] => {
+    if (!shuffled) return choices;
+    return getShuffledChoices(choices, shuffleMap, questionId, blankNum);
+  }, [shuffled, shuffleMap]);
 
   // Group questions by passage (comprehension) or speechText (listening long)
   const passageGroups = (() => {
@@ -261,6 +325,21 @@ export default function PracticePage() {
             <span style={{ flexShrink: 0 }}>{showSectionSelector ? '▲' : '▼'}</span>
           </button>
           <div style={{ display: 'flex', gap: 8 }}>
+             <button
+               className="btn btn-secondary"
+               style={{
+                 padding: '6px 12px', fontSize: 13,
+                 display: 'flex', alignItems: 'center', gap: 5,
+                 background: shuffled ? 'rgba(255,255,255,0.25)' : undefined,
+                 borderColor: shuffled ? '#fbbf24' : undefined,
+                 color: shuffled ? '#fef3c7' : undefined,
+               }}
+               onClick={toggleShuffle}
+               title={shuffled ? 'กลับลำดับเดิม' : 'สลับตัวเลือก A B C D'}
+             >
+               <Shuffle size={14} />
+               {shuffled ? 'Default' : 'Shuffle'}
+             </button>
              <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => {
                 localStorage.removeItem('cept_practice_answers');
                 localStorage.removeItem('cept_practice_qIdx');
@@ -471,7 +550,7 @@ export default function PracticePage() {
                       <select className="rc-select" value=""
                         onChange={e => { if (e.target.value) selectAnswer(e.target.value, q.id); }}>
                         <option value="">— เลือกคำตอบ —</option>
-                        {q.choices.map(c => (
+                        {displayChoices(q.choices, q.id).map(c => (
                           <option key={c.id} value={c.id}>{c.label}. {c.text}</option>
                         ))}
                       </select>
@@ -529,6 +608,7 @@ export default function PracticePage() {
                   question={question}
                   blankAnswers={blankAnswers[question.id] || {}}
                   submitted={!!blankSubmitted[question.id]}
+                  shuffleChoices={shuffled ? displayChoices : undefined}
                   onBlankChange={(blankNum, choiceId) => {
                     if (blankSubmitted[question.id]) return;
                     setBlankAnswers(prev => ({
@@ -603,7 +683,7 @@ export default function PracticePage() {
                 <div className="question-text">{question.text}</div>
 
                 <div className={`choices${sec.type === 'LISTENING_IMAGE' ? ' choices-image' : ''}`}>
-                  {question.choices.map(c => {
+                  {displayChoices(question.choices, question.id).map(c => {
                     const isSelected = answers[question.id] === c.id;
                     let choiceClass = 'choice-btn';
                     let badge = null;
