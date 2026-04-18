@@ -334,39 +334,18 @@ body {
 
 /* Dropdown panel */
 .translate-dropdown {
-  position: absolute;
-  top: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
+  position: fixed;
   background: #1e293b;
   border: 1px solid #334155;
   border-radius: 12px;
   min-width: 140px;
-  max-width: 220px;
-  z-index: 200;
+  max-width: min(220px, 90vw);
+  z-index: 9999;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
   animation: dropdownFadeIn 0.2s ease-out;
   overflow: hidden;
   font-style: normal;
   display: block;
-}
-.translate-dropdown::before {
-  content: '';
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border: 6px solid transparent;
-  border-bottom-color: #334155;
-}
-.translate-dropdown::after {
-  content: '';
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  border: 5px solid transparent;
-  border-bottom-color: #1e293b;
 }
 
 /* Header with word + speak button */
@@ -686,9 +665,18 @@ body {
   .landing-info { padding: 20px; }
 
   /* Exam top bar */
-  .top-bar { padding: 0 12px; }
-  .top-bar-title span { display: none; } /* hide "CEPT Exam" text, keep logo */
+  .top-bar { padding: 0 8px; }
+  .top-bar-inner { height: auto; min-height: 52px; flex-wrap: wrap; gap: 6px; padding: 6px 0; }
+  .top-bar-title span { display: none; }
   .timer-display { font-size: 18px; padding: 5px 10px; gap: 5px; }
+
+  /* Topbar action buttons — icon-only on mobile */
+  .topbar-actions { gap: 4px; flex-wrap: nowrap; }
+  .topbar-btn { padding: 0 8px; height: 32px; font-size: 0; gap: 0; }
+  .topbar-btn svg { flex-shrink: 0; width: 16px; height: 16px; }
+  /* Keep active indicator visible even without text */
+  .topbar-btn-blue.topbar-btn-active,
+  .topbar-btn-yellow.topbar-btn-active { outline: 2px solid currentColor; outline-offset: -2px; }
 
   /* Section header */
   .section-header { padding: 14px 14px 0; }

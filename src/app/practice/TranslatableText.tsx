@@ -1,5 +1,5 @@
 'use client';
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 
 /**
  * In-memory translation cache — shared across all TranslatableText instances.
@@ -58,6 +58,7 @@ export default function TranslatableText({ text, enabled, className, style }: Tr
   const [translations, setTranslations] = useState<string[]>([]);
   const [activeWord, setActiveWord] = useState<string>('');
   const [loading, setLoading] = useState(false);
+  const [dropdownPos, setDropdownPos] = useState<{ top: number; left: number }>({ top: 0, left: 0 });
   const dropdownRef = useRef<HTMLSpanElement>(null);
 
   // Close dropdown when clicking outside
@@ -74,60 +75,59 @@ export default function TranslatableText({ text, enabled, className, style }: Tr
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [hoveredIdx]);
 
-  // Split text into words (preserving punctuation attached to words)
-  const words = text.split(/(\s+)/);
+  const words = useMemo(() => text.split(/(\s+)/), [text]);
 
-  const handleMouseEnter = useCallback(async (word: string, idx: number) => {
+  const openDropdown = useCallback((word: string, idx: number, el: HTMLElement) => {
+    const rect = el.getBoundingClientRect();
+    const dropW = Math.min(220, window.innerWidth * 0.9);
+    let left = rect.left + rect.width / 2 - dropW / 2;
+    left = Math.max(8, Math.min(left, window.innerWidth - dropW - 8));
+    const top = rect.bottom + 6;
+    setDropdownPos({ top, left });
+    setHoveredIdx(idx);
+    setActiveWord(word.replace(/[^a-zA-Z'-]/g, ''));
+  }, []);
+
+  const handleMouseEnter = useCallback(async (word: string, idx: number, e: React.MouseEvent<HTMLSpanElement>) => {
     if (!enabled) return;
     const clean = word.replace(/[^a-zA-Z'-]/g, '');
     if (!clean || clean.length < 2) return;
-
-    setHoveredIdx(idx);
-    setActiveWord(clean);
+    openDropdown(word, idx, e.currentTarget);
     setLoading(true);
-
     const result = await fetchTranslations(clean);
     setTranslations(result);
     setLoading(false);
-  }, [enabled]);
+  }, [enabled, openDropdown]);
 
   const handleMouseLeave = useCallback(() => {
     // Only close on mouse leave if not clicked (mobile keeps it open)
   }, []);
 
-  const handleClick = useCallback(async (word: string, idx: number) => {
+  const handleClick = useCallback(async (word: string, idx: number, e: React.MouseEvent<HTMLSpanElement>) => {
     if (!enabled) return;
     const clean = word.replace(/[^a-zA-Z'-]/g, '');
     if (!clean || clean.length < 2) return;
 
-    // Always speak on every click
     if (typeof window !== 'undefined' && window.speechSynthesis) {
       window.speechSynthesis.cancel();
       await new Promise(r => setTimeout(r, 50));
       const u = new SpeechSynthesisUtterance(clean);
-      u.lang = 'en-US';
-      u.rate = 0.85;
-      u.volume = 1.0;
-      u.pitch = 1.0;
+      u.lang = 'en-US'; u.rate = 0.85; u.volume = 1.0; u.pitch = 1.0;
       window.speechSynthesis.speak(u);
     }
 
-    // Copy to clipboard
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
       navigator.clipboard.writeText(clean).catch(() => {});
     }
 
-    // If clicking different word, fetch new translations
     if (hoveredIdx !== idx) {
-      setHoveredIdx(idx);
-      setActiveWord(clean);
+      openDropdown(word, idx, e.currentTarget);
       setLoading(true);
       const result = await fetchTranslations(clean);
       setTranslations(result);
       setLoading(false);
     }
-    // Re-clicking same word = re-speak, dropdown stays
-  }, [enabled, hoveredIdx]);
+  }, [enabled, hoveredIdx, openDropdown]);
 
   if (!enabled) {
     return <span className={className} style={style}>{text}</span>;
@@ -147,14 +147,15 @@ export default function TranslatableText({ text, enabled, className, style }: Tr
           <span
             key={idx}
             className={isWord ? `translatable-word${isActive ? ' translatable-active' : ''}` : undefined}
-            onMouseEnter={isWord ? () => handleMouseEnter(word, idx) : undefined}
+            onMouseEnter={isWord ? (e) => handleMouseEnter(word, idx, e) : undefined}
             onMouseLeave={handleMouseLeave}
-            onClick={isWord ? (e) => { e.stopPropagation(); e.preventDefault(); handleClick(word, idx); } : undefined}
-            style={{ position: 'relative', display: 'inline' }}
+            onClick={isWord ? (e) => { e.stopPropagation(); e.preventDefault(); handleClick(word, idx, e); } : undefined}
+            style={{ display: 'inline' }}
           >
             {word}
             {isActive && (
-              <span className="translate-dropdown" ref={dropdownRef}>
+              <span className="translate-dropdown" ref={dropdownRef}
+                style={{ top: dropdownPos.top, left: dropdownPos.left }}>
                 <span className="translate-dropdown-header">
                   <span className="translate-dropdown-word">{activeWord}</span>
                   <span

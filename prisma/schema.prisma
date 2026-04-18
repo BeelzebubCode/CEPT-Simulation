@@ -65,6 +65,8 @@ model Choice {
   isCorrect   Boolean  @default(false)
   order       Int
   blankNumber Int      @default(1)
+
+  @@index([questionId])
 }
 
 model ExamAttempt {

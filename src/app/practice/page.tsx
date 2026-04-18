@@ -256,7 +256,7 @@ export default function PracticePage() {
   }, [shuffled, shuffleMap]);
 
   // Group questions by passage (comprehension) or speechText (listening long)
-  const passageGroups = (() => {
+  const passageGroups = useMemo(() => {
     if (!sec || !sec.questions || !isGrouped) return null;
     const groups: { passage: string; speechText: string; questions: Question[] }[] = [];
     const seen = new Map<string, number>();
@@ -270,20 +270,58 @@ export default function PracticePage() {
       }
     }
     return groups;
-  })();
+  }, [sec, isGrouped, isListeningLong]);
 
   // For grouped sections: qIdx indexes groups; for others: indexes questions
   const totalQ = isGrouped && passageGroups ? passageGroups.length : (sec?.questions?.length || 0);
   const question = isGrouped ? null : sec?.questions?.[qIdx];
   const currentGroup = isGrouped && passageGroups ? passageGroups[qIdx] : null;
 
+  // Pre-group FillBlank choices by blankNumber once per question change
+  const blankGroupsByNumber = useMemo(() => {
+    if (!question) return new Map<number, Choice[]>();
+    const map = new Map<number, Choice[]>();
+    for (const c of question.choices) {
+      const bn = c.blankNumber || 1;
+      if (!map.has(bn)) map.set(bn, []);
+      map.get(bn)!.push(c);
+    }
+    return map;
+  }, [question?.id]);  // eslint-disable-line react-hooks/exhaustive-deps
+
   const selectAnswer = useCallback((choiceId: string, questionId?: string) => {
-    if (translateMode) return; // Lock answers while translating
+    if (translateMode) return;
     const qId = questionId || question?.id;
     if (!qId) return;
-    if (answers[qId]) return;
-    setAnswers(prev => ({ ...prev, [qId]: choiceId }));
-  }, [question, answers, translateMode]);
+    setAnswers(prev => {
+      if (prev[qId]) return prev; // already answered — no state update
+      return { ...prev, [qId]: choiceId };
+    });
+  }, [question?.id, translateMode]);
+
+  // Pre-compute dot styles once per answers/qIdx change — avoids O(N) work on every render
+  const questionDotStates = useMemo(() => {
+    if (!sec) return [];
+    const fillBlank = sec.type === 'READING_FILL_BLANK';
+    return sec.questions.map((q, i) => {
+      const isAns = !!answers[q.id];
+      const isCur = i === qIdx;
+      if (isCur) return { id: q.id, bgColor: 'var(--accent)', borderColor: 'var(--accent)', color: '#fff' };
+      if (!isAns) return { id: q.id, bgColor: 'var(--card)', borderColor: 'var(--border)', color: 'var(--text-secondary)' };
+      if (fillBlank && blankSubmitted[q.id]) {
+        const blankNums = [...new Set(q.choices.map(c => c.blankNumber || 1))];
+        const qBA = blankAnswers[q.id] || {};
+        const allCorrect = blankNums.every(bn => q.choices.find(c => c.id === qBA[bn])?.isCorrect);
+        return allCorrect
+          ? { id: q.id, bgColor: 'var(--correct-bg)', borderColor: 'var(--correct)', color: 'var(--correct)' }
+          : { id: q.id, bgColor: 'var(--wrong-bg)', borderColor: 'var(--wrong)', color: 'var(--wrong)' };
+      }
+      const isCorrect = answers[q.id] === q.choices.find(c => c.isCorrect)?.id;
+      return isCorrect
+        ? { id: q.id, bgColor: 'var(--correct-bg)', borderColor: 'var(--correct)', color: 'var(--correct)' }
+        : { id: q.id, bgColor: 'var(--wrong-bg)', borderColor: 'var(--wrong)', color: 'var(--wrong)' };
+    });
+  }, [sec, answers, blankAnswers, blankSubmitted, qIdx]);
 
   const nextQ = () => { if (qIdx < totalQ - 1) setQIdx(qIdx + 1); };
   const prevQ = () => { if (qIdx > 0) setQIdx(qIdx - 1); };
@@ -542,47 +580,11 @@ export default function PracticePage() {
               );
             })
           ) : (
-            /* Standard per-question dots */
-            sec.questions.map((q, i) => {
-              const isAns = !!answers[q.id];
-              const isCur = i === qIdx;
-              let bgColor = 'var(--card)';
-              let borderColor = 'var(--border)';
-              let color = 'var(--text-secondary)';
-
-              if (isCur) {
-                bgColor = 'var(--accent)'; borderColor = 'var(--accent)'; color = '#fff';
-              } else if (isAns) {
-                // For fill-in-the-blank: check correctness from blankAnswers
-                if (isFillBlank && blankSubmitted[q.id]) {
-                  const blankNums = [...new Set(q.choices.map(c => c.blankNumber || 1))];
-                  const qBlankAnswers = blankAnswers[q.id] || {};
-                  const allBlanksCorrect = blankNums.every(bn => {
-                    const selectedId = qBlankAnswers[bn];
-                    const choice = q.choices.find(c => c.id === selectedId);
-                    return choice?.isCorrect;
-                  });
-                  if (allBlanksCorrect) {
-                    bgColor = 'var(--correct-bg)'; borderColor = 'var(--correct)'; color = 'var(--correct)';
-                  } else {
-                    bgColor = 'var(--wrong-bg)'; borderColor = 'var(--wrong)'; color = 'var(--wrong)';
-                  }
-                } else {
-                  const correctChoiceId = q.choices.find(c => c.isCorrect)?.id;
-                  const isCorrect = answers[q.id] === correctChoiceId;
-                  if (isCorrect) {
-                      bgColor = 'var(--correct-bg)'; borderColor = 'var(--correct)'; color = 'var(--correct)';
-                  } else {
-                      bgColor = 'var(--wrong-bg)'; borderColor = 'var(--wrong)'; color = 'var(--wrong)';
-                  }
-                }
-              }
-
-              return (
-                <div key={q.id} style={{ background: bgColor, borderColor, color }} className={`q-dot`}
-                     onClick={() => { setQIdx(i); setShowSectionSelector(false); }}>{i + 1}</div>
-              );
-            })
+            /* Standard per-question dots — styles pre-computed in questionDotStates */
+            questionDotStates.map((dot, i) => (
+              <div key={dot.id} style={{ background: dot.bgColor, borderColor: dot.borderColor, color: dot.color }} className="q-dot"
+                   onClick={() => { setQIdx(i); setShowSectionSelector(false); }}>{i + 1}</div>
+            ))
           )}
         </div>
       </div>
@@ -721,26 +723,23 @@ export default function PracticePage() {
                       <Languages size={16} /> คำศัพท์ตัวเลือก (เลื่อนเมาส์หรือคลิกเพื่อแปล)
                     </div>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
-                      {(() => {
-                         const blankNums = [...new Set(question.choices.map(c => c.blankNumber || 1))].sort();
-                         return blankNums.map(bn => {
-                           const choices = question.choices.filter(c => (c.blankNumber || 1) === bn);
-                           const displayList = shuffled ? displayChoices(choices, question.id, bn) : choices;
-                           return (
-                             <div key={bn} style={{ background: '#fff', padding: 12, borderRadius: 8, border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.02)' }}>
-                               <div style={{ fontSize: 12, fontWeight: 700, color: '#3b82f6', marginBottom: 8, letterSpacing: 0.5 }}>ช่องว่าง ({bn})</div>
-                               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                                 {displayList.map(c => (
-                                   <div key={c.id} style={{ fontSize: 14 }}>
-                                     <span style={{ color: '#94a3b8', marginRight: 6, fontWeight: 600 }}>{c.label}.</span>
-                                     <TranslatableText text={c.text} enabled={true} />
-                                   </div>
-                                 ))}
-                               </div>
-                             </div>
-                           );
-                         });
-                      })()}
+                      {[...blankGroupsByNumber.keys()].sort().map(bn => {
+                        const choices = blankGroupsByNumber.get(bn)!;
+                        const displayList = shuffled ? displayChoices(choices, question.id, bn) : choices;
+                        return (
+                          <div key={bn} style={{ background: '#fff', padding: 12, borderRadius: 8, border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.02)' }}>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: '#3b82f6', marginBottom: 8, letterSpacing: 0.5 }}>ช่องว่าง ({bn})</div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                              {displayList.map(c => (
+                                <div key={c.id} style={{ fontSize: 14 }}>
+                                  <span style={{ color: '#94a3b8', marginRight: 6, fontWeight: 600 }}>{c.label}.</span>
+                                  <TranslatableText text={c.text} enabled={true} />
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -749,9 +748,8 @@ export default function PracticePage() {
                     className="btn btn-primary"
                     style={{ marginTop: 20, width: '100%', padding: '14px 0', fontSize: 16 }}
                     disabled={(() => {
-                      const blankNums = [...new Set(question.choices.map(c => c.blankNumber || 1))];
                       const answered = blankAnswers[question.id] || {};
-                      return blankNums.some(bn => !answered[bn]);
+                      return [...blankGroupsByNumber.keys()].some(bn => !answered[bn]);
                     })()}
                     onClick={() => {
                       setBlankSubmitted(prev => ({ ...prev, [question.id]: true }));
@@ -761,13 +759,12 @@ export default function PracticePage() {
                 ) : (
                   <div style={{ marginTop: 20, padding: 16, borderRadius: 8, background: '#e3f2fd', color: '#0277bd' }}>
                     {(() => {
-                      const blankNums = [...new Set(question.choices.map(c => c.blankNumber || 1))];
+                      const blankNums = [...blankGroupsByNumber.keys()];
                       const answered = blankAnswers[question.id] || {};
                       let correct = 0;
                       for (const bn of blankNums) {
-                        const selectedId = answered[bn];
-                        const choice = question.choices.find(c => c.id === selectedId);
-                        if (choice?.isCorrect) correct++;
+                        const choices = blankGroupsByNumber.get(bn)!;
+                        if (choices.find(c => c.id === answered[bn])?.isCorrect) correct++;
                       }
                       return (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
