@@ -1,7 +1,8 @@
 'use client';
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Volume2, VolumeX, Image, ChevronLeft, ChevronRight, CheckCircle, XCircle, Sparkles, Loader2, Shuffle } from 'lucide-react';
+import { Volume2, VolumeX, Image, ChevronLeft, ChevronRight, CheckCircle, XCircle, Sparkles, Loader2, Shuffle, Languages } from 'lucide-react';
+import TranslatableText from './TranslatableText';
 
 interface Choice { id: string; label: string; text: string; imageUrl?: string; isCorrect: boolean; order: number; blankNumber?: number; }
 interface Question { id: string; text: string; passage?: string; speechText?: string; imageUrl?: string; order: number; choices: Choice[]; }
@@ -127,6 +128,7 @@ export default function PracticePage() {
   const [showSectionSelector, setShowSectionSelector] = useState(false);
   const [shuffled, setShuffled] = useState(false);
   const [shuffleMap, setShuffleMap] = useState<Record<string, string[]>>({});
+  const [translateMode, setTranslateMode] = useState(false);
 
   // Fetch section list on mount
   useEffect(() => {
@@ -330,6 +332,21 @@ export default function PracticePage() {
                style={{
                  padding: '6px 12px', fontSize: 13,
                  display: 'flex', alignItems: 'center', gap: 5,
+                 background: translateMode ? 'rgba(255,255,255,0.25)' : undefined,
+                 borderColor: translateMode ? '#38bdf8' : undefined,
+                 color: translateMode ? '#bae6fd' : undefined,
+               }}
+               onClick={() => setTranslateMode(prev => !prev)}
+               title={translateMode ? 'ปิดโหมดแปล' : 'เปิดโหมดแปลคำศัพท์'}
+             >
+               <Languages size={14} />
+               {translateMode ? 'แปล ON' : 'แปล'}
+             </button>
+             <button
+               className="btn btn-secondary"
+               style={{
+                 padding: '6px 12px', fontSize: 13,
+                 display: 'flex', alignItems: 'center', gap: 5,
                  background: shuffled ? 'rgba(255,255,255,0.25)' : undefined,
                  borderColor: shuffled ? '#fbbf24' : undefined,
                  color: shuffled ? '#fef3c7' : undefined,
@@ -505,7 +522,7 @@ export default function PracticePage() {
                   <div className="rc-passage-badge">🎧 Audio {qIdx + 1}</div>
                   {currentGroup.passage && (
                     <div style={{ fontSize: 14, color: '#475569', marginBottom: 16, lineHeight: 1.65, fontStyle: 'italic' }}>
-                      {currentGroup.passage}
+                      <TranslatableText text={currentGroup.passage} enabled={translateMode} />
                     </div>
                   )}
                   {currentGroup.speechText ? (
@@ -519,14 +536,14 @@ export default function PracticePage() {
                   {isQuestionAnswered && currentGroup.speechText && (
                     <div style={{ marginTop: 16, borderTop: '1px solid #e2e8f0', paddingTop: 14 }}>
                       <div style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1 }}>Transcript</div>
-                      <div style={{ fontSize: 13, color: '#475569', lineHeight: 1.7, fontStyle: 'italic' }}>"{currentGroup.speechText}"</div>
+                      <div style={{ fontSize: 13, color: '#475569', lineHeight: 1.7, fontStyle: 'italic' }}>&quot;<TranslatableText text={currentGroup.speechText} enabled={translateMode} />&quot;</div>
                     </div>
                   )}
                 </>
               ) : (
                 <>
                   <div className="rc-passage-badge">📖 Passage {qIdx + 1}</div>
-                  <div className="rc-passage-text">{currentGroup.passage}</div>
+                  <div className="rc-passage-text"><TranslatableText text={currentGroup.passage} enabled={translateMode} /></div>
                 </>
               )}
             </div>
@@ -544,7 +561,7 @@ export default function PracticePage() {
                   <div key={q.id} className={`rc-q-card${isAns ? (isCorrect ? ' rc-correct' : ' rc-wrong') : ''}`}>
                     <div className="rc-q-header">
                       <span className={`rc-q-num${isAns ? (isCorrect ? ' correct' : ' wrong') : ''}`}>{qi + 1}</span>
-                      <span className="rc-q-text">{q.text}</span>
+                      <span className="rc-q-text"><TranslatableText text={q.text} enabled={translateMode} /></span>
                     </div>
                     {!isAns ? (
                       <select className="rc-select" value=""
@@ -656,7 +673,7 @@ export default function PracticePage() {
               /* ─── STANDARD QUESTION ─── */
               <>
                 {question.passage && (
-                  <div className="question-passage">{question.passage}</div>
+                  <div className="question-passage"><TranslatableText text={question.passage} enabled={translateMode} /></div>
                 )}
 
                 {question.imageUrl ? (
@@ -674,13 +691,13 @@ export default function PracticePage() {
                     {isQuestionAnswered && (
                       <div style={{ borderTop: '1px solid #ddd', paddingTop: 16, marginTop: 16, color: '#444' }}>
                         <strong>Transcript:</strong>
-                        <p style={{ marginTop: 8, fontStyle: 'italic', lineHeight: 1.6 }}>"{question.speechText}"</p>
+                        <p style={{ marginTop: 8, fontStyle: 'italic', lineHeight: 1.6 }}>&quot;<TranslatableText text={question.speechText!} enabled={translateMode} />&quot;</p>
                       </div>
                     )}
                   </div>
                 )}
 
-                <div className="question-text">{question.text}</div>
+                <div className="question-text"><TranslatableText text={question.text} enabled={translateMode} /></div>
 
                 <div className={`choices${sec.type === 'LISTENING_IMAGE' ? ' choices-image' : ''}`}>
                   {displayChoices(question.choices, question.id).map(c => {
@@ -712,7 +729,7 @@ export default function PracticePage() {
                             ? <img src={c.imageUrl} alt={`Option ${c.label}`} className="choice-image" />
                             : <div className="choice-image-placeholder"><Image size={16} /><span>ยังไม่มีรูป</span></div>
                         ) : (
-                          <span>{c.text}</span>
+                          <span><TranslatableText text={c.text} enabled={translateMode} /></span>
                         )}
                         {badge}
                       </button>

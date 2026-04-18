@@ -308,6 +308,64 @@ body {
 .rc-score.good .rc-score-msg { color: #075985; }
 .rc-score.low .rc-score-msg { color: #991b1b; }
 
+/* ===== TRANSLATABLE TEXT ===== */
+.translatable-container { line-height: inherit; }
+.translatable-word {
+  cursor: help;
+  border-bottom: 1.5px dotted rgba(99, 102, 241, 0.35);
+  transition: border-color 0.2s, background 0.2s;
+  border-radius: 2px;
+  padding: 0 1px;
+}
+.translatable-word:hover {
+  border-bottom-color: #6366f1;
+  background: rgba(99, 102, 241, 0.08);
+}
+.translate-tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1e293b;
+  color: #f1f5f9;
+  font-size: 13px;
+  font-weight: 600;
+  font-style: normal;
+  padding: 6px 12px;
+  border-radius: 8px;
+  white-space: nowrap;
+  z-index: 150;
+  pointer-events: none;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  animation: tooltipFadeIn 0.18s ease-out;
+  letter-spacing: 0.2px;
+}
+.translate-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: #1e293b;
+}
+.translate-loading {
+  display: inline-block;
+  animation: tooltipDots 1s steps(3, end) infinite;
+  letter-spacing: 2px;
+  min-width: 24px;
+  text-align: center;
+}
+@keyframes tooltipFadeIn {
+  from { opacity: 0; transform: translateX(-50%) translateY(4px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+@keyframes tooltipDots {
+  0%   { content: '•'; }
+  33%  { content: '••'; }
+  66%  { content: '•••'; }
+}
+
 /* ===== NAV BAR ===== */
 .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card);
   border-top: 1px solid var(--border); padding: 12px 24px;
