@@ -2,8 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 /**
  * GET /api/translate?text=hello&sl=en&tl=th
- * Proxy to Google Translate free endpoint to avoid CORS.
- * Returns { word: "hello", translations: ["สวัสดี", "หวัดดี", ...] }
+ * Returns { word, translations, posGroups: [{pos, words}] }
  */
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -16,9 +15,6 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // dt=t  → main translation
-    // dt=at → alternative translations
-    // dt=bd → dictionary (parts of speech + meanings)
     const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${encodeURIComponent(sl)}&tl=${encodeURIComponent(tl)}&dt=t&dt=at&dt=bd&q=${encodeURIComponent(text)}`;
     const res = await fetch(url, {
       headers: { 'User-Agent': 'Mozilla/5.0' },
@@ -47,20 +43,29 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // 2) Dictionary entries from dt=bd (index 1)
+    // 2) Part-of-speech groups from dt=bd (index 1)
+    // data[1][i] = [posLabel, [[thaiWord, ...], ...]]
+    const posGroups: { pos: string; words: string[] }[] = [];
     if (Array.isArray(data[1])) {
       for (const posGroup of data[1]) {
-        // posGroup[1] = array of meanings
+        const pos = typeof posGroup[0] === 'string' ? posGroup[0] : '';
+        const words: string[] = [];
         if (Array.isArray(posGroup[1])) {
           for (const meaning of posGroup[1]) {
             if (meaning[0] && typeof meaning[0] === 'string') {
               const t = meaning[0].trim();
-              if (t && !seen.has(t.toLowerCase())) {
-                seen.add(t.toLowerCase());
-                translations.push(t);
+              if (t && t.length >= 2) {
+                words.push(t);
+                if (!seen.has(t.toLowerCase())) {
+                  seen.add(t.toLowerCase());
+                  translations.push(t);
+                }
               }
             }
           }
+        }
+        if (pos && words.length > 0) {
+          posGroups.push({ pos, words: words.slice(0, 5) });
         }
       }
     }
@@ -82,18 +87,14 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // Fallback: if nothing found, use original text
-    if (translations.length === 0) {
-      translations.push(text);
-    }
+    if (translations.length === 0) translations.push(text);
 
-    // Filter out single-character junk (ก, ข, ค etc.) that Google returns
     const filtered = translations.filter(t => t.length >= 2);
 
-    // Limit to 8 meanings max
     return NextResponse.json({
       word: text,
       translations: (filtered.length > 0 ? filtered : translations).slice(0, 8),
+      posGroups,
     });
   } catch {
     return NextResponse.json({ error: 'Translation failed' }, { status: 500 });
