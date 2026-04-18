@@ -44,7 +44,8 @@ export async function GET(req: NextRequest) {
     }
 
     // 2) Part-of-speech groups from dt=bd (index 1)
-    // data[1][i] = [posLabel, [[thaiWord, ...], ...]]
+    // data[1][i] = [posLabel, [thaiWord, thaiWord, ...], detailArray, posLabel, count]
+    // posGroup[1] is a plain string array, NOT array-of-arrays
     const posGroups: { pos: string; words: string[] }[] = [];
     if (Array.isArray(data[1])) {
       for (const posGroup of data[1]) {
@@ -52,14 +53,12 @@ export async function GET(req: NextRequest) {
         const words: string[] = [];
         if (Array.isArray(posGroup[1])) {
           for (const meaning of posGroup[1]) {
-            if (meaning[0] && typeof meaning[0] === 'string') {
-              const t = meaning[0].trim();
-              if (t && t.length >= 2) {
-                words.push(t);
-                if (!seen.has(t.toLowerCase())) {
-                  seen.add(t.toLowerCase());
-                  translations.push(t);
-                }
+            const t = typeof meaning === 'string' ? meaning.trim() : '';
+            if (t && t.length >= 2) {
+              words.push(t);
+              if (!seen.has(t.toLowerCase())) {
+                seen.add(t.toLowerCase());
+                translations.push(t);
               }
             }
           }

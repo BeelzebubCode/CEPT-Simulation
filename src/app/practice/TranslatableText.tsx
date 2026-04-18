@@ -21,7 +21,7 @@ async function fetchTranslations(word: string): Promise<TranslateResult> {
 
   const promise = (async () => {
     try {
-      const res = await fetch(`/api/translate?text=${encodeURIComponent(key)}&sl=en&tl=th`);
+      const res = await fetch(`/api/translate?text=${encodeURIComponent(key)}&sl=en&tl=th&v=2`);
       if (!res.ok) return { translations: [key], posGroups: [] };
       const data = await res.json();
       const result: TranslateResult = {
