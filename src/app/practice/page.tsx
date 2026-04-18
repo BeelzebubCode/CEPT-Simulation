@@ -34,12 +34,13 @@ function getShuffledChoices(choices: Choice[], shuffleMap: Record<string, string
   }).filter(Boolean);
 }
 
-function FillBlankPassage({ question, blankAnswers, submitted, onBlankChange, shuffleChoices }: {
+function FillBlankPassage({ question, blankAnswers, submitted, onBlankChange, shuffleChoices, translateMode }: {
   question: Question;
   blankAnswers: Record<number, string>;
   submitted: boolean;
   onBlankChange: (blankNum: number, choiceId: string) => void;
   shuffleChoices?: (choices: Choice[], questionId: string, blankNum?: number) => Choice[];
+  translateMode?: boolean;
 }) {
   if (!question.passage) return null;
   const blankNums = [...new Set(question.choices.map(c => c.blankNumber || 1))].sort((a, b) => a - b);
@@ -54,7 +55,7 @@ function FillBlankPassage({ question, blankAnswers, submitted, onBlankChange, sh
       {parts.map((part, i) => {
         if (i % 2 === 0) {
           // Text part
-          return <span key={i}>{part}</span>;
+          return <span key={i}><TranslatableText text={part} enabled={!!translateMode} /></span>;
         }
         // Blank number
         const blankNum = parseInt(part);
@@ -176,10 +177,27 @@ export default function PracticePage() {
     const sectionId = sectionList[secIdx]?.id;
     if (!sectionId || loadedSections[sectionId]) return;
     setSectionLoading(true);
-    fetch(`/api/exam?sectionId=${sectionId}`).then(r => r.json()).then((data: Section) => {
-      setLoadedSections(prev => ({ ...prev, [sectionId]: data }));
-      setSectionLoading(false);
-    }).catch(() => setSectionLoading(false));
+    fetch(`/api/exam?sectionId=${sectionId}`)
+      .then(async r => {
+        if (!r.ok) {
+          const errData = await r.json().catch(() => null);
+          throw new Error(errData?.details || errData?.error || `API error ${r.status}`);
+        }
+        return r.json();
+      })
+      .then((data: Section) => {
+        if (data && data.questions) {
+          setLoadedSections(prev => ({ ...prev, [sectionId]: data }));
+        } else {
+          throw new Error('Invalid section data received');
+        }
+        setSectionLoading(false);
+      })
+      .catch((err) => {
+        console.error('Failed to load section detail:', err);
+        setInitError(err.message || 'Failed to load section detail');
+        setSectionLoading(false);
+      });
   }, [secIdx, sectionList, loadedSections]);
 
   // Persist state
@@ -203,7 +221,7 @@ export default function PracticePage() {
 
   // Build shuffle map when toggled on or when section changes
   const buildShuffleMap = useCallback(() => {
-    if (!sec) return;
+    if (!sec || !sec.questions) return;
     const newMap: Record<string, string[]> = {};
     for (const q of sec.questions) {
       // Group choices by blankNumber for fill-blank
@@ -239,7 +257,7 @@ export default function PracticePage() {
 
   // Group questions by passage (comprehension) or speechText (listening long)
   const passageGroups = (() => {
-    if (!sec || !isGrouped) return null;
+    if (!sec || !sec.questions || !isGrouped) return null;
     const groups: { passage: string; speechText: string; questions: Question[] }[] = [];
     const seen = new Map<string, number>();
     for (const q of sec.questions) {
@@ -255,8 +273,8 @@ export default function PracticePage() {
   })();
 
   // For grouped sections: qIdx indexes groups; for others: indexes questions
-  const totalQ = isGrouped && passageGroups ? passageGroups.length : (sec?.questions.length || 0);
-  const question = isGrouped ? null : sec?.questions[qIdx];
+  const totalQ = isGrouped && passageGroups ? passageGroups.length : (sec?.questions?.length || 0);
+  const question = isGrouped ? null : sec?.questions?.[qIdx];
   const currentGroup = isGrouped && passageGroups ? passageGroups[qIdx] : null;
 
   const selectAnswer = useCallback((choiceId: string, questionId?: string) => {
@@ -687,6 +705,7 @@ export default function PracticePage() {
                   blankAnswers={blankAnswers[question.id] || {}}
                   submitted={!!blankSubmitted[question.id]}
                   shuffleChoices={shuffled ? displayChoices : undefined}
+                  translateMode={translateMode}
                   onBlankChange={(blankNum, choiceId) => {
                     if (translateMode) return; // Lock while translating
                     if (blankSubmitted[question.id]) return;
