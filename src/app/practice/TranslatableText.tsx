@@ -88,36 +88,33 @@ export default function TranslatableText({ text, enabled, className, style }: Tr
     const clean = word.replace(/[^a-zA-Z'-]/g, '');
     if (!clean || clean.length < 2) return;
 
-    // Toggle: if already showing this word, close it
-    if (hoveredIdx === idx) {
-      setHoveredIdx(null);
-      setTranslation('');
-      // Stop speaking if toggling off
-      if (typeof window !== 'undefined' && window.speechSynthesis) {
-        window.speechSynthesis.cancel();
-      }
-      return;
-    }
-
-    // Speak the word aloud
+    // Always speak on every click (even re-clicking same word)
     if (typeof window !== 'undefined' && window.speechSynthesis) {
       window.speechSynthesis.cancel();
+      // Small delay after cancel so browser resets audio pipeline
+      await new Promise(r => setTimeout(r, 50));
       const u = new SpeechSynthesisUtterance(clean);
       u.lang = 'en-US';
       u.rate = 0.85;
+      u.volume = 1.0; // Max volume
+      u.pitch = 1.0;
       window.speechSynthesis.speak(u);
     }
 
-    // Copy to clipboard
+    // Copy to clipboard on every click
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
       navigator.clipboard.writeText(clean).catch(() => {});
     }
 
-    setHoveredIdx(idx);
-    setLoading(true);
-    const result = await fetchTranslation(clean);
-    setTranslation(result);
-    setLoading(false);
+    // If clicking a different word, fetch translation
+    if (hoveredIdx !== idx) {
+      setHoveredIdx(idx);
+      setLoading(true);
+      const result = await fetchTranslation(clean);
+      setTranslation(result);
+      setLoading(false);
+    }
+    // If clicking same word again — just re-speak (tooltip stays visible)
   }, [enabled, hoveredIdx]);
 
   if (!enabled) {

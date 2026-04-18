@@ -244,7 +244,7 @@ export default function PracticePage() {
     if (!qId) return;
     if (answers[qId]) return;
     setAnswers(prev => ({ ...prev, [qId]: choiceId }));
-  }, [question, answers]);
+  }, [question, answers, translateMode]);
 
   const nextQ = () => { if (qIdx < totalQ - 1) setQIdx(qIdx + 1); };
   const prevQ = () => { if (qIdx > 0) setQIdx(qIdx - 1); };
@@ -629,6 +629,7 @@ export default function PracticePage() {
                   submitted={!!blankSubmitted[question.id]}
                   shuffleChoices={shuffled ? displayChoices : undefined}
                   onBlankChange={(blankNum, choiceId) => {
+                    if (translateMode) return; // Lock while translating
                     if (blankSubmitted[question.id]) return;
                     setBlankAnswers(prev => ({
                       ...prev,
