@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Volume2, VolumeX, Image, ChevronLeft, ChevronRight, CheckCircle, XCircle, Sparkles, Loader2, Shuffle, Languages } from 'lucide-react';
+import { Volume2, VolumeX, Image, ChevronLeft, ChevronRight, CheckCircle, XCircle, Sparkles, Loader2, Shuffle, Languages, RotateCcw, Trash2, ChevronDown } from 'lucide-react';
 import TranslatableText from './TranslatableText';
 
 interface Choice { id: string; label: string; text: string; imageUrl?: string; isCorrect: boolean; order: number; blankNumber?: number; }
@@ -363,49 +363,65 @@ export default function PracticePage() {
                {shuffled ? 'Default' : 'Shuffle'}
              </button>
              <div style={{ position: 'relative' }}>
-               <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: 13 }}
-                 onClick={() => setShowResetMenu(prev => !prev)}>Reset ▾</button>
+               <button className="btn btn-secondary"
+                 style={{ padding: '6px 12px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 5 }}
+                 onClick={() => setShowResetMenu(prev => !prev)}>
+                 <RotateCcw size={14} />
+                 Reset
+                 <ChevronDown size={12} style={{ opacity: 0.7 }} />
+               </button>
                {showResetMenu && (
-                 <div className="reset-dropdown">
-                   <button className="reset-dropdown-item" onClick={() => {
-                     // Reset only current section
-                     if (sec) {
-                       const qIds = new Set(sec.questions.map(q => q.id));
-                       setAnswers(prev => {
-                         const next = { ...prev };
-                         for (const id of qIds) delete next[id];
-                         return next;
-                       });
-                       setBlankAnswers(prev => {
-                         const next = { ...prev };
-                         for (const id of qIds) delete next[id];
-                         return next;
-                       });
-                       setBlankSubmitted(prev => {
-                         const next = { ...prev };
-                         for (const id of qIds) delete next[id];
-                         return next;
-                       });
+                 <>
+                   <div className="reset-overlay" onClick={() => setShowResetMenu(false)} />
+                   <div className="reset-dropdown">
+                     <div className="reset-dropdown-title">Reset Progress</div>
+                     <button className="reset-dropdown-item" onClick={() => {
+                       if (sec) {
+                         const qIds = new Set(sec.questions.map(q => q.id));
+                         setAnswers(prev => {
+                           const next = { ...prev };
+                           for (const id of qIds) delete next[id];
+                           return next;
+                         });
+                         setBlankAnswers(prev => {
+                           const next = { ...prev };
+                           for (const id of qIds) delete next[id];
+                           return next;
+                         });
+                         setBlankSubmitted(prev => {
+                           const next = { ...prev };
+                           for (const id of qIds) delete next[id];
+                           return next;
+                         });
+                         setQIdx(0);
+                       }
+                       setShowResetMenu(false);
+                     }}>
+                       <span className="reset-dropdown-icon"><RotateCcw size={15} /></span>
+                       <span className="reset-dropdown-text">
+                         <span className="reset-dropdown-label">รีเซ็ตหมวดนี้</span>
+                         <span className="reset-dropdown-desc">{secSummary?.name}</span>
+                       </span>
+                     </button>
+                     <button className="reset-dropdown-item reset-dropdown-danger" onClick={() => {
+                       localStorage.removeItem('cept_practice_answers');
+                       localStorage.removeItem('cept_practice_qIdx');
+                       localStorage.removeItem('cept_practice_blankAnswers');
+                       localStorage.removeItem('cept_practice_blankSubmitted');
+                       setAnswers({});
+                       setBlankAnswers({});
+                       setBlankSubmitted({});
                        setQIdx(0);
-                     }
-                     setShowResetMenu(false);
-                   }}>
-                     🔄 Reset หมวดนี้ ({secSummary?.name})
-                   </button>
-                   <button className="reset-dropdown-item reset-dropdown-danger" onClick={() => {
-                     localStorage.removeItem('cept_practice_answers');
-                     localStorage.removeItem('cept_practice_qIdx');
-                     localStorage.removeItem('cept_practice_blankAnswers');
-                     localStorage.removeItem('cept_practice_blankSubmitted');
-                     setAnswers({});
-                     setBlankAnswers({});
-                     setBlankSubmitted({});
-                     setQIdx(0);
-                     setShowResetMenu(false);
-                   }}>
-                     🗑️ Reset ทั้งหมด
-                   </button>
-                 </div>
+                       setShowResetMenu(false);
+                     }}>
+                       <span className="reset-dropdown-icon"><Trash2 size={15} /></span>
+                       <span className="reset-dropdown-text">
+                         <span className="reset-dropdown-label">รีเซ็ตทั้งหมด</span>
+                         <span className="reset-dropdown-desc">ลบคำตอบทุกหมวด</span>
+                       </span>
+                     </button>
+                   </div>
+                 </>
                )}
              </div>
              <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => router.push('/')}>Exit</button>
