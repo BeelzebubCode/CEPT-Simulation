@@ -344,6 +344,7 @@ body {
   animation: dropdownFadeIn 0.2s ease-out;
   overflow: hidden;
   font-style: normal;
+  display: block;
 }
 .translate-dropdown::before {
   content: '';
@@ -373,12 +374,6 @@ body {
   border-bottom: 1px solid #334155;
   background: rgba(255,255,255,0.03);
 }
-.translate-dropdown-word {
-  font-size: 14px;
-  font-weight: 700;
-  color: #93c5fd;
-  letter-spacing: 0.3px;
-}
 .translate-dropdown-speak {
   background: none;
   border: none;
@@ -388,6 +383,15 @@ body {
   border-radius: 4px;
   transition: background 0.15s;
   line-height: 1;
+  color: #94a3b8;
+  display: inline-flex;
+  align-items: center;
+}
+.translate-dropdown-word {
+  font-size: 14px;
+  font-weight: 700;
+  color: #93c5fd;
+  letter-spacing: 0.3px;
 }
 .translate-dropdown-speak:hover {
   background: rgba(255,255,255,0.1);
@@ -395,6 +399,7 @@ body {
 
 /* List of meanings */
 .translate-dropdown-list {
+  display: block;
   max-height: 200px;
   overflow-y: auto;
   scrollbar-width: thin;
@@ -405,6 +410,7 @@ body {
 .translate-dropdown-list::-webkit-scrollbar-thumb { background: #475569; border-radius: 2px; }
 
 .translate-dropdown-item {
+  display: block;
   padding: 8px 14px;
   font-size: 14px;
   font-weight: 500;
@@ -420,6 +426,7 @@ body {
 
 /* Loading state */
 .translate-dropdown-loading {
+  display: block;
   padding: 14px;
   text-align: center;
   color: #94a3b8;

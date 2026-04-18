@@ -750,7 +750,7 @@ export default function PracticePage() {
                     {isQuestionAnswered && (
                       <div style={{ borderTop: '1px solid #ddd', paddingTop: 16, marginTop: 16, color: '#444' }}>
                         <strong>Transcript:</strong>
-                        <p style={{ marginTop: 8, fontStyle: 'italic', lineHeight: 1.6 }}>&quot;<TranslatableText text={question.speechText!} enabled={translateMode} />&quot;</p>
+                        <div style={{ marginTop: 8, fontStyle: 'italic', lineHeight: 1.6 }}>&quot;<TranslatableText text={question.speechText!} enabled={translateMode} />&quot;</div>
                       </div>
                     )}
                   </div>

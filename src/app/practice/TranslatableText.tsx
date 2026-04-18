@@ -58,7 +58,7 @@ export default function TranslatableText({ text, enabled, className, style }: Tr
   const [translations, setTranslations] = useState<string[]>([]);
   const [activeWord, setActiveWord] = useState<string>('');
   const [loading, setLoading] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
+  const dropdownRef = useRef<HTMLSpanElement>(null);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -154,10 +154,12 @@ export default function TranslatableText({ text, enabled, className, style }: Tr
           >
             {word}
             {isActive && (
-              <div className="translate-dropdown" ref={dropdownRef}>
-                <div className="translate-dropdown-header">
+              <span className="translate-dropdown" ref={dropdownRef}>
+                <span className="translate-dropdown-header">
                   <span className="translate-dropdown-word">{activeWord}</span>
-                  <button
+                  <span
+                    role="button"
+                    tabIndex={0}
                     className="translate-dropdown-speak"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -168,20 +170,22 @@ export default function TranslatableText({ text, enabled, className, style }: Tr
                         window.speechSynthesis.speak(u);
                       }
                     }}
-                  >🔊</button>
-                </div>
+                  >
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+                  </span>
+                </span>
                 {loading ? (
-                  <div className="translate-dropdown-loading">
+                  <span className="translate-dropdown-loading">
                     <span>•••</span>
-                  </div>
+                  </span>
                 ) : (
-                  <div className="translate-dropdown-list">
+                  <span className="translate-dropdown-list">
                     {translations.map((t, i) => (
-                      <div key={i} className="translate-dropdown-item">{t}</div>
+                      <span key={i} className="translate-dropdown-item">{t}</span>
                     ))}
-                  </div>
+                  </span>
                 )}
-              </div>
+              </span>
             )}
           </span>
         );
