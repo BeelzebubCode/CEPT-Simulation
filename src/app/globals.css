@@ -365,6 +365,7 @@ body {
   33%  { content: '••'; }
   66%  { content: '•••'; }
 }
+.translate-tooltip-icon { font-size: 11px; margin-right: 2px; }
 
 /* ===== NAV BAR ===== */
 .nav-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--card);

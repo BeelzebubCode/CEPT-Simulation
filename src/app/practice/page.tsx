@@ -239,6 +239,7 @@ export default function PracticePage() {
   const currentGroup = isGrouped && passageGroups ? passageGroups[qIdx] : null;
 
   const selectAnswer = useCallback((choiceId: string, questionId?: string) => {
+    if (translateMode) return; // Lock answers while translating
     const qId = questionId || question?.id;
     if (!qId) return;
     if (answers[qId]) return;
@@ -565,6 +566,7 @@ export default function PracticePage() {
                     </div>
                     {!isAns ? (
                       <select className="rc-select" value=""
+                        disabled={translateMode}
                         onChange={e => { if (e.target.value) selectAnswer(e.target.value, q.id); }}>
                         <option value="">— เลือกคำตอบ —</option>
                         {displayChoices(q.choices, q.id).map(c => (

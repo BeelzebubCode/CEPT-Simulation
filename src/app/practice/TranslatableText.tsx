@@ -92,7 +92,25 @@ export default function TranslatableText({ text, enabled, className, style }: Tr
     if (hoveredIdx === idx) {
       setHoveredIdx(null);
       setTranslation('');
+      // Stop speaking if toggling off
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
       return;
+    }
+
+    // Speak the word aloud
+    if (typeof window !== 'undefined' && window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(clean);
+      u.lang = 'en-US';
+      u.rate = 0.85;
+      window.speechSynthesis.speak(u);
+    }
+
+    // Copy to clipboard
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(clean).catch(() => {});
     }
 
     setHoveredIdx(idx);
@@ -131,7 +149,7 @@ export default function TranslatableText({ text, enabled, className, style }: Tr
                 {loading ? (
                   <span className="translate-loading">•••</span>
                 ) : (
-                  translation
+                  <><span className="translate-tooltip-icon">🔊</span> {translation}</>
                 )}
               </span>
             )}
