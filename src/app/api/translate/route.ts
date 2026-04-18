@@ -86,10 +86,13 @@ export async function GET(req: NextRequest) {
       translations.push(text);
     }
 
+    // Filter out single-character junk (ก, ข, ค etc.) that Google returns
+    const filtered = translations.filter(t => t.length >= 2);
+
     // Limit to 8 meanings max
     return NextResponse.json({
       word: text,
-      translations: translations.slice(0, 8),
+      translations: (filtered.length > 0 ? filtered : translations).slice(0, 8),
     });
   } catch {
     return NextResponse.json({ error: 'Translation failed' }, { status: 500 });
