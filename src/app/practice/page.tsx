@@ -132,21 +132,24 @@ export default function PracticePage() {
 
   // Fetch section list on mount
   useEffect(() => {
-    fetch('/api/exam').then(r => r.json()).then((data: SectionSummary[]) => {
-      setSectionList(data);
-      setLoading(false);
-      // Restore saved state
-      const saved = localStorage.getItem('cept_practice_answers');
-      if (saved) setAnswers(JSON.parse(saved));
-      const savedBlank = localStorage.getItem('cept_practice_blankAnswers');
-      if (savedBlank) setBlankAnswers(JSON.parse(savedBlank));
-      const savedBlankSub = localStorage.getItem('cept_practice_blankSubmitted');
-      if (savedBlankSub) setBlankSubmitted(JSON.parse(savedBlankSub));
-      const savedSec = localStorage.getItem('cept_practice_secIdx');
-      const savedQ = localStorage.getItem('cept_practice_qIdx');
-      if (savedSec) setSecIdx(parseInt(savedSec));
-      if (savedQ) setQIdx(parseInt(savedQ));
-    });
+    fetch('/api/exam')
+      .then(r => { if (!r.ok) throw new Error(`API error ${r.status}`); return r.json(); })
+      .then((data: SectionSummary[]) => {
+        setSectionList(data);
+        setLoading(false);
+        // Restore saved state
+        const saved = localStorage.getItem('cept_practice_answers');
+        if (saved) setAnswers(JSON.parse(saved));
+        const savedBlank = localStorage.getItem('cept_practice_blankAnswers');
+        if (savedBlank) setBlankAnswers(JSON.parse(savedBlank));
+        const savedBlankSub = localStorage.getItem('cept_practice_blankSubmitted');
+        if (savedBlankSub) setBlankSubmitted(JSON.parse(savedBlankSub));
+        const savedSec = localStorage.getItem('cept_practice_secIdx');
+        const savedQ = localStorage.getItem('cept_practice_qIdx');
+        if (savedSec) setSecIdx(parseInt(savedSec));
+        if (savedQ) setQIdx(parseInt(savedQ));
+      })
+      .catch(err => { console.error('Failed to load sections:', err); setLoading(false); });
   }, []);
 
   // Fetch section questions when secIdx changes
