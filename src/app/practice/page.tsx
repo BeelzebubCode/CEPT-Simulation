@@ -129,6 +129,7 @@ export default function PracticePage() {
   const [shuffled, setShuffled] = useState(false);
   const [shuffleMap, setShuffleMap] = useState<Record<string, string[]>>({});
   const [translateMode, setTranslateMode] = useState(false);
+  const [showResetMenu, setShowResetMenu] = useState(false);
 
   // Fetch section list on mount
   useEffect(() => {
@@ -361,16 +362,52 @@ export default function PracticePage() {
                <Shuffle size={14} />
                {shuffled ? 'Default' : 'Shuffle'}
              </button>
-             <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => {
-                localStorage.removeItem('cept_practice_answers');
-                localStorage.removeItem('cept_practice_qIdx');
-                localStorage.removeItem('cept_practice_blankAnswers');
-                localStorage.removeItem('cept_practice_blankSubmitted');
-                setAnswers({});
-                setBlankAnswers({});
-                setBlankSubmitted({});
-                setQIdx(0);
-             }}>Reset</button>
+             <div style={{ position: 'relative' }}>
+               <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: 13 }}
+                 onClick={() => setShowResetMenu(prev => !prev)}>Reset ▾</button>
+               {showResetMenu && (
+                 <div className="reset-dropdown">
+                   <button className="reset-dropdown-item" onClick={() => {
+                     // Reset only current section
+                     if (sec) {
+                       const qIds = new Set(sec.questions.map(q => q.id));
+                       setAnswers(prev => {
+                         const next = { ...prev };
+                         for (const id of qIds) delete next[id];
+                         return next;
+                       });
+                       setBlankAnswers(prev => {
+                         const next = { ...prev };
+                         for (const id of qIds) delete next[id];
+                         return next;
+                       });
+                       setBlankSubmitted(prev => {
+                         const next = { ...prev };
+                         for (const id of qIds) delete next[id];
+                         return next;
+                       });
+                       setQIdx(0);
+                     }
+                     setShowResetMenu(false);
+                   }}>
+                     🔄 Reset หมวดนี้ ({secSummary?.name})
+                   </button>
+                   <button className="reset-dropdown-item reset-dropdown-danger" onClick={() => {
+                     localStorage.removeItem('cept_practice_answers');
+                     localStorage.removeItem('cept_practice_qIdx');
+                     localStorage.removeItem('cept_practice_blankAnswers');
+                     localStorage.removeItem('cept_practice_blankSubmitted');
+                     setAnswers({});
+                     setBlankAnswers({});
+                     setBlankSubmitted({});
+                     setQIdx(0);
+                     setShowResetMenu(false);
+                   }}>
+                     🗑️ Reset ทั้งหมด
+                   </button>
+                 </div>
+               )}
+             </div>
              <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => router.push('/')}>Exit</button>
           </div>
         </div>
