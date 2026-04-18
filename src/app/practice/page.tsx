@@ -130,11 +130,20 @@ export default function PracticePage() {
   const [shuffleMap, setShuffleMap] = useState<Record<string, string[]>>({});
   const [translateMode, setTranslateMode] = useState(false);
   const [showResetMenu, setShowResetMenu] = useState(false);
+  const [initError, setInitError] = useState<string | null>(null);
 
   // Fetch section list on mount
-  useEffect(() => {
+  const fetchSections = useCallback(() => {
+    setLoading(true);
+    setInitError(null);
     fetch('/api/exam')
-      .then(r => { if (!r.ok) throw new Error(`API error ${r.status}`); return r.json(); })
+      .then(async r => {
+        if (!r.ok) {
+          const errData = await r.json().catch(() => null);
+          throw new Error(errData?.details || errData?.error || `API error ${r.status}`);
+        }
+        return r.json();
+      })
       .then((data: SectionSummary[]) => {
         setSectionList(data);
         setLoading(false);
@@ -150,8 +159,16 @@ export default function PracticePage() {
         if (savedSec) setSecIdx(parseInt(savedSec));
         if (savedQ) setQIdx(parseInt(savedQ));
       })
-      .catch(err => { console.error('Failed to load sections:', err); setLoading(false); });
+      .catch(err => {
+        console.error('Failed to load sections:', err);
+        setInitError(err.message || 'Failed to communicate with server');
+        setLoading(false);
+      });
   }, []);
+
+  useEffect(() => {
+    fetchSections();
+  }, [fetchSections]);
 
   // Fetch section questions when secIdx changes
   useEffect(() => {
