@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { Volume2, VolumeX, Image, ChevronLeft, ChevronRight, CheckCircle, XCircle, Sparkles, Loader2, Shuffle, Languages, RotateCcw, Trash2, ChevronDown } from 'lucide-react';
+import { Volume2, VolumeX, Image, ChevronLeft, ChevronRight, CheckCircle, XCircle, Sparkles, Loader2, Shuffle, Languages, RotateCcw, Trash2, ChevronDown, LogOut } from 'lucide-react';
 import TranslatableText from './TranslatableText';
 
 interface Choice { id: string; label: string; text: string; imageUrl?: string; isCorrect: boolean; order: number; blankNumber?: number; }
@@ -331,16 +331,9 @@ export default function PracticePage() {
             </span>
             <span style={{ flexShrink: 0 }}>{showSectionSelector ? '▲' : '▼'}</span>
           </button>
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div className="topbar-actions">
              <button
-               className="btn btn-secondary"
-               style={{
-                 padding: '6px 12px', fontSize: 13,
-                 display: 'flex', alignItems: 'center', gap: 5,
-                 background: translateMode ? 'rgba(255,255,255,0.25)' : undefined,
-                 borderColor: translateMode ? '#38bdf8' : undefined,
-                 color: translateMode ? '#bae6fd' : undefined,
-               }}
+               className={`btn btn-secondary topbar-btn${translateMode ? ' topbar-btn-active topbar-btn-blue' : ''}`}
                onClick={() => setTranslateMode(prev => !prev)}
                title={translateMode ? 'ปิดโหมดแปล' : 'เปิดโหมดแปลคำศัพท์'}
              >
@@ -348,14 +341,7 @@ export default function PracticePage() {
                {translateMode ? 'แปล ON' : 'แปล'}
              </button>
              <button
-               className="btn btn-secondary"
-               style={{
-                 padding: '6px 12px', fontSize: 13,
-                 display: 'flex', alignItems: 'center', gap: 5,
-                 background: shuffled ? 'rgba(255,255,255,0.25)' : undefined,
-                 borderColor: shuffled ? '#fbbf24' : undefined,
-                 color: shuffled ? '#fef3c7' : undefined,
-               }}
+               className={`btn btn-secondary topbar-btn${shuffled ? ' topbar-btn-active topbar-btn-yellow' : ''}`}
                onClick={toggleShuffle}
                title={shuffled ? 'กลับลำดับเดิม' : 'สลับตัวเลือก A B C D'}
              >
@@ -363,12 +349,11 @@ export default function PracticePage() {
                {shuffled ? 'Default' : 'Shuffle'}
              </button>
              <div style={{ position: 'relative' }}>
-               <button className="btn btn-secondary"
-                 style={{ padding: '6px 12px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 5 }}
+               <button className="btn btn-secondary topbar-btn"
                  onClick={() => setShowResetMenu(prev => !prev)}>
                  <RotateCcw size={14} />
                  Reset
-                 <ChevronDown size={12} style={{ opacity: 0.7 }} />
+                 <ChevronDown size={12} style={{ opacity: 0.7, marginLeft: -2 }} />
                </button>
                {showResetMenu && (
                  <>
@@ -424,7 +409,7 @@ export default function PracticePage() {
                  </>
                )}
              </div>
-             <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: 13 }} onClick={() => router.push('/')}>Exit</button>
+             <button className="btn btn-secondary topbar-btn" onClick={() => router.push('/')}><LogOut size={14} />Exit</button>
           </div>
         </div>
         <div className="progress-container">
@@ -621,20 +606,21 @@ export default function PracticePage() {
                       <span className="rc-q-text"><TranslatableText text={q.text} enabled={translateMode} /></span>
                     </div>
                     {!isAns ? (
-                      <select className="rc-select" value=""
-                        disabled={translateMode}
-                        onChange={e => { if (e.target.value) selectAnswer(e.target.value, q.id); }}>
-                        <option value="">— เลือกคำตอบ —</option>
+                      <div className="choices" style={{ marginTop: 12, gap: 8, padding: 0 }}>
                         {displayChoices(q.choices, q.id).map(c => (
-                          <option key={c.id} value={c.id}>{c.label}. {c.text}</option>
+                          <button key={c.id} className="choice-btn" style={{ padding: '10px 14px' }}
+                            onClick={() => selectAnswer(c.id, q.id)}>
+                            <span className="choice-letter">{c.label}</span>
+                            <span><TranslatableText text={c.text} enabled={translateMode} /></span>
+                          </button>
                         ))}
-                      </select>
+                      </div>
                     ) : (
                       <div className={`rc-answer ${isCorrect ? 'correct' : 'wrong'}`}>
                         <span className="rc-icon">{isCorrect ? '✓' : '✗'}</span>
-                        <span>{selectedChoice?.label}. {selectedChoice?.text}</span>
+                        <span>{selectedChoice?.label}. <TranslatableText text={selectedChoice?.text || ''} enabled={translateMode} /></span>
                         {!isCorrect && correctChoice && (
-                          <span className="rc-correct-ans">✓ {correctChoice.label}. {correctChoice.text}</span>
+                          <span className="rc-correct-ans">✓ {correctChoice.label}. <TranslatableText text={correctChoice?.text || ''} enabled={translateMode} /></span>
                         )}
                       </div>
                     )}
@@ -693,6 +679,35 @@ export default function PracticePage() {
                     }));
                   }}
                 />
+                {translateMode && (
+                  <div style={{ marginTop: 24, padding: '16px 20px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: 12 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: '#64748b', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <Languages size={16} /> คำศัพท์ตัวเลือก (เลื่อนเมาส์หรือคลิกเพื่อแปล)
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
+                      {(() => {
+                         const blankNums = [...new Set(question.choices.map(c => c.blankNumber || 1))].sort();
+                         return blankNums.map(bn => {
+                           const choices = question.choices.filter(c => (c.blankNumber || 1) === bn);
+                           const displayList = shuffled ? displayChoices(choices, question.id, bn) : choices;
+                           return (
+                             <div key={bn} style={{ background: '#fff', padding: 12, borderRadius: 8, border: '1px solid #e2e8f0', boxShadow: '0 1px 2px rgba(0,0,0,0.02)' }}>
+                               <div style={{ fontSize: 12, fontWeight: 700, color: '#3b82f6', marginBottom: 8, letterSpacing: 0.5 }}>ช่องว่าง ({bn})</div>
+                               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                 {displayList.map(c => (
+                                   <div key={c.id} style={{ fontSize: 14 }}>
+                                     <span style={{ color: '#94a3b8', marginRight: 6, fontWeight: 600 }}>{c.label}.</span>
+                                     <TranslatableText text={c.text} enabled={true} />
+                                   </div>
+                                 ))}
+                               </div>
+                             </div>
+                           );
+                         });
+                      })()}
+                    </div>
+                  </div>
+                )}
                 {!blankSubmitted[question.id] ? (
                   <button
                     className="btn btn-primary"
